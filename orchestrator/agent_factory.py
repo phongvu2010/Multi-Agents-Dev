@@ -2,7 +2,7 @@ import os
 import re
 import json
 from pathlib import Path
-from typing import Dict, Any, Optional, Type
+from typing import Dict, Any, Optional, Type, List
 from pydantic import BaseModel
 
 try:
@@ -75,20 +75,56 @@ class AgentFactory:
                 rules_text.append(f"### RULE: {rf.name}\n{rf.read_text(encoding='utf-8')}\n")
         return "\n".join(rules_text)
 
+    def get_available_mcp_servers(self) -> List[Dict[str, Any]]:
+        """Phát hiện các MCP Servers khả dụng trong Antigravity 2.0 (~/.gemini/antigravity/mcp)."""
+        mcp_dirs = [
+            Path(os.path.expanduser("~/.gemini/antigravity/mcp")),
+            self.base_dir / ".gemini" / "antigravity" / "mcp"
+        ]
+        available_mcps = []
+        for mcp_root in mcp_dirs:
+            if mcp_root.exists() and mcp_root.is_dir():
+                for d in mcp_root.iterdir():
+                    if d.is_dir() and not d.name.startswith("."):
+                        tools = [t.stem for t in d.glob("*.json")]
+                        available_mcps.append({
+                            "name": d.name,
+                            "path": str(d),
+                            "tools": tools
+                        })
+        return available_mcps
+
+    def _get_mcp_context_instructions(self) -> str:
+        """Sinh chỉ dẫn khai thác MCP Servers cho Agents trên Antigravity 2.0."""
+        mcps = self.get_available_mcp_servers()
+        if not mcps:
+            return ""
+        lines = [
+            "\n### TẬN DỤNG CÁC MCP SERVERS KHẢ DỤNG TRÊN ANTIGRAVITY 2.0:",
+            "Các Agents được trang bị quyền truy vấn các MCP tools sau để hỗ trợ thẩm định và phát triển:"
+        ]
+        for m in mcps:
+            tools_str = ", ".join(m["tools"][:6]) if m["tools"] else "native tools"
+            lines.append(f"- MCP Server `{m['name']}`: Công cụ khả dụng: [{tools_str}]")
+        lines.append("- Sub-Team 2 & 3: Ưu tiên dùng `gemini-api_gemini-api-docs` (`gemini_search_docs`, `gemini_get_doc`) để tra cứu chuẩn SDK Google GenAI & OpenAPI specs mới nhất.")
+        lines.append("- Sub-Team 1 & 4: Ưu tiên dùng `gemini-notebook-mcp` / `notebooklm` để tra cứu tài liệu nghiệp vụ tham khảo.")
+        return "\n".join(lines) + "\n"
+
     def create_discovery_team(
         self,
         tech_lead_profile: Dict[str, Any],
         response_schema: Optional[Type[BaseModel]] = DiscoveryResult
     ):
-        """Khởi tạo Sub-Team 1: Product Discovery hỗ trợ Structured Output."""
+        """Khởi tạo Sub-Team 1: Product Discovery hỗ trợ Structured Output & MCP Servers."""
         prompt = self._read_prompt("subteam_1_discovery.md")
         rules = self._load_rules()
+        mcp_context = self._get_mcp_context_instructions()
         system_instruction = f"""
 {prompt}
 
 HỆ THỐNG TIÊU CHUẨN & QUY TẮC CỐT LÕI:
 {rules}
-
+{mcp_context}
 HỒ SƠ TECH LEAD & HỆ THỐNG:
 - Tech Lead ưu tiên review: {tech_lead_profile.get('tech_lead', {}).get('familiar_stacks', {})}
 - Mục tiêu: Chuyển đổi yêu cầu thô từ khách hàng thành đặc tả có cấu trúc chuẩn xác (PRD, Gherkin User Stories, UI/UX Flows).
@@ -119,12 +155,13 @@ HỒ SƠ TECH LEAD & HỆ THỐNG:
         prompt = self._read_prompt("subteam_2_architecture.md")
         profile_notes = tech_lead_profile.get("tech_lead", {}).get("architectural_preference", {}).get("explanation", "")
         rules = self._load_rules()
+        mcp_context = self._get_mcp_context_instructions()
         system_instruction = f"""
 {prompt}
 
 TIÊU CHUẨN KIẾN TRÚC & CODING:
 {rules}
-
+{mcp_context}
 ĐẶC BIỆT LƯU Ý VỀ TECH STACK THEO YÊU CẦU CỦA TECH LEAD:
 {profile_notes}
 Nếu yêu cầu bài toán phù hợp, HÃY ƯU TIÊN CHỌN:
@@ -157,12 +194,13 @@ Nếu yêu cầu bài toán phù hợp, HÃY ƯU TIÊN CHỌN:
         """Khởi tạo Sub-Team 3: Core Engineering (trang bị Native Tools: Viết code & tạo thư mục)."""
         prompt = self._read_prompt("subteam_3_engineering.md")
         rules = self._load_rules()
+        mcp_context = self._get_mcp_context_instructions()
         system_instruction = f"""
 {prompt}
 
 TIÊU CHUẨN MÃ NGUỒN:
 {rules}
-
+{mcp_context}
 TECH STACK ĐÃ PHÊ DUYỆT BỞI TECH LEAD:
 {tech_stack}
 Hãy lập trình mã nguồn hoàn chỉnh chuẩn Clean Architecture, type hints đầy đủ, và tương thích 100% với openapi.yaml.
@@ -186,11 +224,13 @@ Hãy lập trình mã nguồn hoàn chỉnh chuẩn Clean Architecture, type hin
         """Khởi tạo Sub-Team 4: QA & Security (trang bị Native Tools: chạy PyTest & rà soát bảo mật)."""
         prompt = self._read_prompt("subteam_4_qa.md")
         rules = self._load_rules()
+        mcp_context = self._get_mcp_context_instructions()
         system_instruction = f"""
 {prompt}
 
 TIÊU CHÍ REVIEW & BẢO MẬT:
 {rules}
+{mcp_context}
 """
         if HAS_ANTIGRAVITY_SDK and self.api_key:
             cap = CapabilitiesConfig(enable_subagents=True) if CapabilitiesConfig else None
@@ -212,7 +252,8 @@ TIÊU CHÍ REVIEW & BẢO MẬT:
     def create_release_team(self):
         """Khởi tạo Sub-Team 5: Release & Handover."""
         prompt = self._read_prompt("subteam_5_release.md")
-        system_instruction = f"{prompt}\n{self._load_rules()}"
+        mcp_context = self._get_mcp_context_instructions()
+        system_instruction = f"{prompt}\n{self._load_rules()}\n{mcp_context}"
         if HAS_ANTIGRAVITY_SDK and self.api_key:
             cap = CapabilitiesConfig(enable_subagents=True) if CapabilitiesConfig else None
             config_kwargs = {

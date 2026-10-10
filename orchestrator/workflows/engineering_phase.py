@@ -92,9 +92,11 @@ async def run_engineering_phase(
     )
 
     # =========================================================================
-    # WAVE 3: ROUTERS & MOBILE FRONTEND (REACT NATIVE TYPESCRIPT)
+    # WAVE 3: ROUTERS & FRONTEND (REACT NATIVE MOBILE HOẶC REACT VITE/NEXT.JS WEB)
     # =========================================================================
-    console.print("  [bold cyan]► Wave 3: Thiết lập Routers API & Giao diện Mobile App React Native...[/bold cyan]")
+    fe_target = domain_info.get("frontend_target", "mobile")
+    fe_label = "Web Portal (React Vite / Next.js TypeScript)" if fe_target == "web" else "Mobile App (React Native TypeScript)"
+    console.print(f"  [bold cyan]► Wave 3: Thiết lập Routers API & Giao diện {fe_label}...[/bold cyan]")
     synthesizer.synthesize_frontend(domain_info)
 
     # =========================================================================

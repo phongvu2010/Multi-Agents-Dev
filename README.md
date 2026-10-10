@@ -121,6 +121,12 @@ Multi-Agents-Dev/
    - **Alembic Database Migrations:** Tự động tạo `alembic.ini`, `env.py`, version `0001_initial_schema.py` và module `migration_manager.py` cho PostgreSQL & SQLite.
    - **Native Antigravity Subagents:** Thiết lập đầy đủ 5 Sub-Teams chuyên biệt tại `.agents/subteams/` để lập trình viên có thể tương tác trực tiếp qua Chat Canvas.
 
+5. **Giai đoạn 5: Kiến Trúc Mở Rộng & Tối Ưu Nền Tảng (Refactored Capabilities)**
+   - **Nhánh Web Frontend Song Song Mobile:** `DomainAnalyzer` tự động phân loại nền tảng (`frontend_target: web | mobile`) để sinh ứng dụng **Web Portal (React Vite / Next.js TypeScript)** với Navbar, CatalogView, BookingForm, OrderTracker hoặc **Mobile App (React Native)**.
+   - **Thực thi Jest Subprocess Thật:** Tích hợp `run_tests.cjs` chạy kiểm thử độc lập qua Node.js subprocess trong QA Phase, đánh giá assertions thực tế và trả mã exit code chuẩn xác.
+   - **Dọn dẹp Skills Directory:** Chuẩn hóa thư mục kỹ năng `.agents/skills/`, loại bỏ các folder rác hoặc rỗng để tối ưu khả năng tự động khám phá kỹ năng.
+   - **Khai thác Toàn diện MCP Servers:** Tích hợp `get_available_mcp_servers()` phát hiện và nạp tự động các MCP Tools (`gemini-api_gemini-api-docs`, `gemini-notebook-mcp`) vào system instructions của cả 5 Sub-Teams.
+
 ---
 
 ## 🚀 Hướng Dẫn Vận Hành

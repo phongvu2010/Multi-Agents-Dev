@@ -26,18 +26,20 @@ Khi nhận yêu cầu phần mềm từ người dùng hoặc khách hàng, hệ
    - **Thành viên:** Backend Engineer Agent, Frontend/Mobile Engineer Agent, DevOps Engineer Agent.
    - **Động cơ điều phối:** **DAG Execution Engine** phân rã các đợt thực thi song song (Execution Waves) kết hợp **Hybrid Synthesis Engine** (Cân bằng Heuristic Context + Deep LLM Dynamic Code Synthesis).
    - **Chuẩn mã nguồn Backend:** Clean Architecture 5 tầng (`core/` -> `models/` -> `schemas/` -> `repositories/` -> `services/` -> `routers/`) tích hợp **SQLAlchemy 2.0 ORM**, Pydantic v2 và **Alembic Database Migrations**.
-   - **Chuẩn mã nguồn Mobile:** **React Native (TypeScript)** đa màn hình (`AuthScreen`, `CatalogScreen`, `BookingScreen`, `TrackingScreen`), REST API Client, Store và **Jest Unit Testing**.
-   - **Đầu ra:** Mã nguồn hoàn chỉnh tại `workspaces/output_project/` (Backend FastAPI, Mobile React Native TypeScript, Docker).
+   - **Chuẩn mã nguồn Frontend (Linh hoạt Web & Mobile):**
+     - **Web Portal:** **React Vite / Next.js (TypeScript)** với responsive components (`Navbar`, `CatalogView`, `BookingForm`, `OrderTracker`), REST API Client, Store và Jest test suite.
+     - **Mobile App:** **React Native (TypeScript)** đa màn hình (`AuthScreen`, `CatalogScreen`, `BookingScreen`, `TrackingScreen`), Navigation và Jest test suite.
+   - **Đầu ra:** Mã nguồn hoàn chỉnh tại `workspaces/output_project/` (Backend FastAPI, Frontend Web/Mobile TypeScript, Docker).
 
 4. **Sub-Team 4: Quality Assurance & Security Audit (`.agents/subteams/subteam_4_qa.md`)**
    - **Thành viên:** QA Automation Agent, Code Reviewer Agent, Security Auditor Agent, Database Auditor Agent.
    - **Kỹ năng sử dụng:** `test-runner`, `code-review-evaluator`, `secret-scanner`.
    - **Cơ chế kiểm thử ba lớp (Triple Verification):** 
-     - **Backend:** Chạy thực tế `pytest` (TestClient + Session testing).
+     - **Backend:** Chạy thực tế `pytest` qua subprocess (TestClient + Session testing).
      - **Database:** Thẩm định tính toàn vẹn của Alembic Migrations (`alembic.ini`, `env.py`, `versions/0001_initial_schema.py`).
-     - **Frontend/Mobile:** Kiểm tra cấu trúc đa màn hình, TypeScript Type Safety & thực thi bộ **Jest Unit Test**.
+     - **Frontend (Web/Mobile):** Kiểm tra cấu trúc đa màn hình / components, TypeScript AST & **thực thi bộ Jest Test Suite qua Node subprocess (`run_tests.cjs`)**.
      - **Security:** Quét tĩnh Secret Leaks & kiểm toán OWASP API Security Top 10.
-   - ⟳ **Auto-Healing Loop:** Nếu phát hiện lỗi (Defect Ticket), tự động áp bản vá trực tiếp vào mã nguồn tối đa 3 lần.
+   - ⟳ **Auto-Healing Loop:** Nếu phát hiện lỗi (Defect Ticket), tự động trích xuất traceback, áp bản vá trực tiếp vào mã nguồn tối đa 3 lần.
    - 🚦 **Chốt chặn:** Dừng lại tại **Gate 3 (Production Deploy Sign-off)** tại `review_gate_3_deploy.md`.
 
 5. **Sub-Team 5: Release & Client Handover (`.agents/subteams/subteam_5_release.md`)**
@@ -54,9 +56,10 @@ Hệ thống được thiết kế tối ưu cho việc **Manual Review của Te
 - **Backend Framework:** `Python (FastAPI v0.110+)`
 - **ORM / Database Access:** `SQLAlchemy 2.0` Declarative Mapped Models + Repositories Pattern
 - **Database Migrations:** `Alembic 1.13+` Version-Controlled Schema Migrations
-- **Frontend / Mobile:** `React Native (TypeScript)` đa màn hình + `Jest`
+- **Frontend / Web & Mobile:** `React Native (TypeScript)` (Mobile) hoặc `Next.js / React Vite (TypeScript)` (Web) + `Jest`
 - **Database:** `PostgreSQL 15+` (production) & `SQLite` (local/testing)
 - **Kiến trúc mã nguồn:** Phân tầng triệt để Clean Architecture (`core/` -> `models/` -> `schemas/` -> `repositories/` -> `services/` -> `routers/`).
+- **Tích hợp MCP Servers:** Khai thác `gemini-api_gemini-api-docs` cho API specs và `gemini-notebook-mcp` cho domain research.
 
 ---
 
