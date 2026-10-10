@@ -1,5 +1,5 @@
 # TÀI LIỆU THIẾT KẾ KIẾN TRÚC HỆ THỐNG (SYSTEM ARCHITECTURE)
-**Dự án:** HealthClinicApp
+**Dự án:** EduMaster_App
 **Phiên bản:** 1.0.0 (Release Candidate)
 **Trưởng ban Kiến trúc:** System Architect Agent & Tech Lead
 

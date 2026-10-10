@@ -1,12 +1,13 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from typing import List
+from sqlalchemy.orm import Session
+from app.core.database import get_db
 from app.schemas.catalog import CatalogItemResponse
+from app.repositories.catalog_repo import CatalogRepository
 
 router = APIRouter(prefix="/catalog", tags=["Catalog"])
 
 @router.get("", response_model=List[CatalogItemResponse])
-async def get_catalog():
-    return [
-        CatalogItemResponse(id="cat_01", name="FlowerItem Premium", price=120000.0, stock_quantity=25, is_active=True),
-        CatalogItemResponse(id="cat_02", name="FlowerItem Standard", price=80000.0, stock_quantity=50, is_active=True)
-    ]
+def get_catalog(db: Session = Depends(get_db)):
+    repo = CatalogRepository(db)
+    return repo.list_active()

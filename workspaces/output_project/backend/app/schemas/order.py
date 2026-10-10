@@ -1,11 +1,10 @@
 from pydantic import BaseModel, Field
-from datetime import datetime
 from typing import Optional
 
 class OrderCreateRequest(BaseModel):
-    item_id: str = Field(..., example="item_uuid_123")
-    scheduled_time: str = Field(..., example="2026-10-15T09:00:00Z")
-    notes: Optional[str] = Field(None, example="Ghi chú yêu cầu phục vụ")
+    item_id: str = Field(..., min_length=1)
+    scheduled_time: str = Field(..., min_length=5)
+    notes: Optional[str] = Field(None)
 
 class OrderResponse(BaseModel):
     id: str
@@ -13,3 +12,7 @@ class OrderResponse(BaseModel):
     scheduled_time: str
     status: str
     total_amount: float
+    notes: Optional[str] = None
+
+    class Config:
+        from_attributes = True

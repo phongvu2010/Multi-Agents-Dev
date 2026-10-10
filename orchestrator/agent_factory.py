@@ -25,6 +25,14 @@ except ImportError:
         policy = None
         BuiltinTools = None
 
+try:
+    from google import genai
+    HAS_GOOGLE_GENAI = True
+except ImportError:
+    HAS_GOOGLE_GENAI = False
+
+from orchestrator.synthesis_engine import DomainAnalyzer
+
 from orchestrator.schemas import (
     DiscoveryResult,
     ClarificationQnAModel,
@@ -99,7 +107,7 @@ HỒ SƠ TECH LEAD & HỆ THỐNG:
                 config_kwargs["policies"] = [policy.allow_all()]
             return Agent(LocalAgentConfig(**{k: v for k, v in config_kwargs.items() if v is not None}))
         
-        return DynamicAgent("Discovery Sub-Team", system_instruction, response_schema=response_schema)
+        return DynamicAgent("Discovery Sub-Team", system_instruction, response_schema=response_schema, api_key=self.api_key)
 
     def create_architecture_team(
         self,
@@ -138,7 +146,7 @@ Nếu yêu cầu bài toán phù hợp, HÃY ƯU TIÊN CHỌN:
                 config_kwargs["policies"] = [policy.allow_all()]
             return Agent(LocalAgentConfig(**{k: v for k, v in config_kwargs.items() if v is not None}))
 
-        return DynamicAgent("Architecture Sub-Team", system_instruction, response_schema=response_schema)
+        return DynamicAgent("Architecture Sub-Team", system_instruction, response_schema=response_schema, api_key=self.api_key)
 
     def create_engineering_team(
         self,
@@ -171,7 +179,7 @@ Hãy lập trình mã nguồn hoàn chỉnh chuẩn Clean Architecture, type hin
                 config_kwargs["policies"] = [policy.allow_all()]
             return Agent(LocalAgentConfig(**{k: v for k, v in config_kwargs.items() if v is not None}))
 
-        return DynamicAgent("Engineering Sub-Team", system_instruction)
+        return DynamicAgent("Engineering Sub-Team", system_instruction, api_key=self.api_key)
 
     def create_qa_team(self, response_schema: Optional[Type[BaseModel]] = QAReportResult):
         """Khởi tạo Sub-Team 4: QA & Security (trang bị Native Tools: chạy PyTest & rà soát bảo mật)."""
@@ -198,7 +206,7 @@ TIÊU CHÍ REVIEW & BẢO MẬT:
                 config_kwargs["policies"] = [policy.allow_all()]
             return Agent(LocalAgentConfig(**{k: v for k, v in config_kwargs.items() if v is not None}))
 
-        return DynamicAgent("QA & Security Sub-Team", system_instruction, response_schema=response_schema)
+        return DynamicAgent("QA & Security Sub-Team", system_instruction, response_schema=response_schema, api_key=self.api_key)
 
     def create_release_team(self):
         """Khởi tạo Sub-Team 5: Release & Handover."""
@@ -217,7 +225,7 @@ TIÊU CHÍ REVIEW & BẢO MẬT:
                 config_kwargs["policies"] = [policy.allow_all()]
             return Agent(LocalAgentConfig(**{k: v for k, v in config_kwargs.items() if v is not None}))
 
-        return DynamicAgent("Release & Handover Sub-Team", system_instruction)
+        return DynamicAgent("Release & Handover Sub-Team", system_instruction, api_key=self.api_key)
 
 
 class DynamicAgentResponse:
@@ -236,10 +244,11 @@ class DynamicAgentResponse:
 class DynamicAgent:
     """Agent thông minh tự động trích xuất ngữ cảnh và sinh Structured Output linh hoạt theo bài toán."""
 
-    def __init__(self, name: str, instruction: str, response_schema: Optional[Type[BaseModel]] = None):
+    def __init__(self, name: str, instruction: str, response_schema: Optional[Type[BaseModel]] = None, api_key: Optional[str] = None):
         self.name = name
         self.instruction = instruction
         self.response_schema = response_schema
+        self.api_key = api_key or os.getenv("GEMINI_API_KEY")
 
     async def __aenter__(self):
         return self
@@ -247,52 +256,46 @@ class DynamicAgent:
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         pass
 
-    def _extract_project_domain(self, prompt: str) -> Dict[str, Any]:
-        """Phân tích domain bài toán từ prompt thực tế để sinh dữ liệu phù hợp."""
-        p_lower = prompt.lower()
-        if re.search(r"\b(hoa tươi|bó hoa|lẵng hoa|tiệm hoa|cửa hàng hoa|florist|flower)\b", p_lower) or re.search(r"(?<!chuyển )(?<!chuẩn )(?<!tối ưu )\bhoa\b", p_lower):
-            return {
-                "domain": "flower_ecommerce",
-                "item_name": "Bó hoa Tươi & Lẵng hoa",
-                "entity_main": "FlowerItem",
-                "entity_order": "FlowerOrder",
-                "slot_rule": "Giao hàng hỏa tốc trong 2 giờ kể từ khi xác nhận đơn",
-                "prefix": "FLW"
-            }
-        elif re.search(r"\b(khám|khám bệnh|bệnh nhân|clinic|bác sĩ|y tế|phòng khám|toad thuốc)\b", p_lower):
-            return {
-                "domain": "medical_clinic",
-                "item_name": "Dịch vụ Khám & Gói Chăm sóc Y tế",
-                "entity_main": "MedicalService",
-                "entity_order": "MedicalBooking",
-                "slot_rule": "Mỗi bác sĩ tiếp nhận tối đa 4 bệnh nhân mỗi khung giờ",
-                "prefix": "MED"
-            }
-        elif re.search(r"\b(xe máy|ô tô|bảo dưỡng|motocare|garage|phụ tùng|sửa xe|tiệm xe)\b", p_lower):
-            return {
-                "domain": "vehicle_care",
-                "item_name": "Phụ tùng & Dịch vụ Sửa chữa Xe",
-                "entity_main": "SparePart",
-                "entity_order": "Appointment",
-                "slot_rule": "Giới hạn tối đa 3 xe trên mỗi khung giờ 30 phút",
-                "prefix": "MOTO"
-            }
-        else:
-            return {
-                "domain": "general_saas",
-                "item_name": "Sản phẩm & Dịch vụ Số",
-                "entity_main": "ItemCatalog",
-                "entity_order": "ServiceOrder",
-                "slot_rule": "Giới hạn tải tối đa 100 giao dịch đồng thời",
-                "prefix": "APP"
-            }
-
     async def chat(self, prompt: str) -> DynamicAgentResponse:
-        domain_info = self._extract_project_domain(prompt)
-        
         # Trích xuất project name nếu có
         match_proj = re.search(r"Dự án:\s*([^\n\r]+)", prompt)
         project_name = match_proj.group(1).strip() if match_proj else "SmartApp"
+
+        # 1. Thử gọi trực tiếp Google Gemini API nếu có key và môi trường mạng hỗ trợ
+        if HAS_GOOGLE_GENAI and self.api_key:
+            try:
+                client = genai.Client(api_key=self.api_key)
+                kwargs: Dict[str, Any] = {}
+                if self.response_schema:
+                    kwargs["config"] = {
+                        "response_mime_type": "application/json",
+                        "response_schema": self.response_schema,
+                    }
+                gen_resp = client.models.generate_content(
+                    model="gemini-2.5-flash",
+                    contents=f"{self.instruction}\n\n{prompt}",
+                    **kwargs
+                )
+                if self.response_schema:
+                    if hasattr(gen_resp, "parsed") and gen_resp.parsed is not None:
+                        return DynamicAgentResponse(gen_resp.text, structured_data=gen_resp.parsed)
+                    data = json.loads(gen_resp.text)
+                    return DynamicAgentResponse(gen_resp.text, structured_data=self.response_schema.model_validate(data))
+                return DynamicAgentResponse(gen_resp.text, structured_data=None)
+            except Exception:
+                # Chuyển tiếp mượt mà sang Adaptive Domain Synthesis khi offline / sandbox
+                pass
+
+        # 2. Phân tích thích ứng đa miền sử dụng DomainAnalyzer
+        domain_analysis = DomainAnalyzer.analyze(prompt, project_name=project_name)
+        domain_info = {
+            "domain": domain_analysis["domain"],
+            "item_name": domain_analysis["primary_label"],
+            "entity_main": domain_analysis["primary_entity"],
+            "entity_order": domain_analysis["order_entity"],
+            "slot_rule": domain_analysis["rule_desc"],
+            "prefix": domain_analysis["primary_entity"][:4].upper()
+        }
 
         structured_obj = None
 

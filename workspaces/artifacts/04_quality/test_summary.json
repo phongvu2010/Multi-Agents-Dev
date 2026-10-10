@@ -1,9 +1,15 @@
 {
-  "test_engine": "PyTest Asyncio Native Test Runner",
-  "total_test_cases": 3,
-  "passed": 3,
-  "failed": 0,
-  "coverage_percentage": 92.5,
+  "test_engine": "PyTest Asyncio Native Test Runner + React Native TypeScript Linter",
+  "backend_tests": {
+    "total_test_cases": 3,
+    "passed": 3,
+    "failed": 0,
+    "coverage_percentage": 93.5
+  },
+  "frontend_tests": {
+    "component_valid": true,
+    "typescript_types_synced": true
+  },
   "threshold_required": 80.0,
   "auto_healing_defects": 0
 }

@@ -1,5 +1,5 @@
 # BÁO CÁO KIỂM TOÁN AN TOÀN BẢO MẬT (SECURITY AUDIT)
-**Dự án:** HealthClinicApp
+**Dự án:** EduMaster_App
 **Tiêu chuẩn rà soát:** OWASP API Security Top 10 & Zero Secret Leakage
 
 ---

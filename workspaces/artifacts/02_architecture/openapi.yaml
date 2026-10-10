@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
-  title: HealthClinicApp API
-  description: API chuẩn Clean Architecture cho HealthClinicApp
+  title: EduMaster_App API
+  description: API chuẩn Clean Architecture cho EduMaster_App
   version: 1.0.0
 paths:
   /api/v1/auth/register:

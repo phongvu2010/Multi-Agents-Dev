@@ -42,7 +42,7 @@ class SDLCOrchestrator:
         env_hitl = os.getenv("HITL_ENABLED", "true").lower() in ("true", "1", "yes")
         final_hitl = hitl_enabled and env_hitl
 
-        self.hitl_manager = HITLManager(self.hitl_config, enabled=final_hitl)
+        self.hitl_manager = HITLManager(self.hitl_config, enabled=final_hitl, artifacts_dir=self.artifacts_dir)
         self.persistence = StatePersistence(self.checkpoints_dir)
         self.factory = AgentFactory(self.base_dir)
 

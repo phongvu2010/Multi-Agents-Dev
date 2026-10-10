@@ -1,5 +1,5 @@
 {
-  "project": "HealthClinicApp",
+  "project": "EduMaster_App",
   "version": "1.0.0",
   "epic_count": 3,
   "stories": [
@@ -17,18 +17,18 @@
     {
       "id": "US-02",
       "epic": "Core Order & Booking",
-      "title": "Đặt hàng / Đặt lịch Dịch vụ Khám & Gói Chăm sóc Y tế",
+      "title": "Đặt hàng / Đặt lịch Phụ tùng & Dịch vụ Sửa chữa Xe",
       "as_a": "Khách hàng",
-      "i_want_to": "Chọn dịch vụ Dịch vụ Khám & Gói Chăm sóc Y tế và chọn thời gian thực hiện",
+      "i_want_to": "Chọn dịch vụ Phụ tùng & Dịch vụ Sửa chữa Xe và chọn thời gian thực hiện",
       "so_that": "Đơn hàng của tôi được chuẩn bị chu đáo và không bị chờ đợi",
       "priority": "MUST_HAVE",
       "story_points": 5,
-      "acceptance_criteria_gherkin": "Scenario: Đặt dịch vụ vào khung giờ còn trống\n  Given khung giờ được chọn còn slot trống hợp lệ\n  When người dùng bấm xác nhận đặt đơn\n  Then hệ thống tạo đơn với trạng thái 'CONFIRMED' và trừ 1 slot còn trống\n\nScenario: Từ chối khi vượt công suất (Mỗi bác sĩ tiếp nhận tối đa 4 bệnh nhân mỗi khung giờ)\n  Given khung giờ đã đạt ngưỡng giới hạn tối đa\n  When người dùng cố gắng đặt thêm\n  Then hệ thống từ chối với HTTP 400 Bad Request và thông báo 'Khung giờ đã đầy chỗ'"
+      "acceptance_criteria_gherkin": "Scenario: Đặt dịch vụ vào khung giờ còn trống\n  Given khung giờ được chọn còn slot trống hợp lệ\n  When người dùng bấm xác nhận đặt đơn\n  Then hệ thống tạo đơn với trạng thái 'CONFIRMED' và trừ 1 slot còn trống\n\nScenario: Từ chối khi vượt công suất (Giới hạn tối đa 5 xe mỗi khung giờ (BR-01))\n  Given khung giờ đã đạt ngưỡng giới hạn tối đa\n  When người dùng cố gắng đặt thêm\n  Then hệ thống từ chối với HTTP 400 Bad Request và thông báo 'Khung giờ đã đầy chỗ'"
     },
     {
       "id": "US-03",
       "epic": "Catalog & Pricing",
-      "title": "Tra cứu Bảng Giá Dịch vụ Khám & Gói Chăm sóc Y tế",
+      "title": "Tra cứu Bảng Giá Phụ tùng & Dịch vụ Sửa chữa Xe",
       "as_a": "Khách hàng và Nhân viên",
       "i_want_to": "Xem danh mục mặt hàng niêm yết minh bạch kèm hình ảnh và đơn giá",
       "so_that": "Tôi nắm rõ chi phí chính xác trước khi ra quyết định mua hàng",

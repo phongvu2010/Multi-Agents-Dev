@@ -1,12 +1,13 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
-from app.routers import auth, orders, catalog
+from app.core.database import init_db
+from app.routers import auth, orders, catalog, health
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
     version=settings.VERSION,
-    openapi_url=f"{settings.API_V1_STR}/openapi.json"
+    description="Clean Architecture API cho EduMaster_App"
 )
 
 app.add_middleware(
@@ -17,10 +18,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Khởi tạo bảng dữ liệu
+init_db()
+
+# Đăng ký Routers
+app.include_router(health.router, prefix=settings.API_V1_STR)
 app.include_router(auth.router, prefix=settings.API_V1_STR)
 app.include_router(orders.router, prefix=settings.API_V1_STR)
 app.include_router(catalog.router, prefix=settings.API_V1_STR)
-
-@app.get("/api/v1/health")
-async def health_check():
-    return {"status": "healthy", "project": "HealthClinicApp", "version": "1.0.0"}

@@ -1,32 +1,31 @@
-from typing import List, Dict, Any
+from typing import List
 from fastapi import HTTPException, status
+from sqlalchemy.orm import Session
 from app.core.config import settings
-
-# In-memory store cho môi trường kiểm thử
-_ORDERS_DB: List[Dict[str, Any]] = []
+from app.repositories.order_repo import OrderRepository
+from app.models.order import OrderModel
 
 class OrderService:
-    @staticmethod
-    async def create_order(item_id: str, scheduled_time: str, notes: str | None = None) -> Dict[str, Any]:
-        # Kiểm tra Business Rule công suất tối đa
-        slot_count = sum(1 for o in _ORDERS_DB if o.get("scheduled_time") == scheduled_time)
-        if slot_count >= settings.MAX_SLOT_CAPACITY:
+    def __init__(self, db: Session):
+        self.repo = OrderRepository(db)
+
+    def create_order(self, item_id: str, scheduled_time: str, notes: str = None) -> OrderModel:
+        # Kiểm tra Business Rule công suất tối đa theo BR-01
+        current_count = self.repo.count_by_scheduled_time(scheduled_time)
+        if current_count >= settings.MAX_SLOT_CAPACITY:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"Khung giờ {scheduled_time} đã đạt giới hạn tối đa {settings.MAX_SLOT_CAPACITY} yêu cầu. Vui lòng chọn khung giờ khác!"
             )
-        
-        new_order = {
-            "id": f"ORD_{len(_ORDERS_DB) + 1:04d}",
-            "item_id": item_id,
-            "scheduled_time": scheduled_time,
-            "status": "CONFIRMED",
-            "total_amount": 150000.0,
-            "notes": notes
-        }
-        _ORDERS_DB.append(new_order)
-        return new_order
 
-    @staticmethod
-    async def get_all_orders() -> List[Dict[str, Any]]:
-        return _ORDERS_DB
+        order_id = f"ORD_{current_count + 1001}"
+        return self.repo.create(
+            order_id=order_id,
+            item_id=item_id,
+            scheduled_time=scheduled_time,
+            total_amount=150000.0,
+            notes=notes
+        )
+
+    def list_orders(self) -> List[OrderModel]:
+        return self.repo.get_all()

@@ -1,4 +1,5 @@
 import pytest
+import uuid
 from fastapi.testclient import TestClient
 from app.main import app
 from app.core.config import settings
@@ -7,7 +8,7 @@ client = TestClient(app)
 
 def test_orders_and_capacity_limit_rule():
     headers = {"Authorization": "Bearer test_valid_token"}
-    slot_time = "2026-10-20T10:00:00Z"
+    slot_time = f"2026-10-20T{uuid.uuid4().hex[:4]}:00Z"
 
     # Đặt các yêu cầu hợp lệ cho tới giới hạn MAX_SLOT_CAPACITY
     max_cap = settings.MAX_SLOT_CAPACITY
