@@ -104,7 +104,7 @@ Hệ thống đã hoàn thiện trọn vẹn cả **4 Giai đoạn cốt lõi** 
 |---|---|---|
 | **Giai đoạn 1** | Khung sườn & Phase Discovery | • Orchestrator State Machine.<br>• Sub-Team 1 bóc tách PRD, User Stories, Gherkin.<br>• **State Persistence**: Lưu checkpoint tự động, khôi phục bằng cờ `--resume`. |
 | **Giai đoạn 2** | Architecture & Task Decomposition | • System Architect ưu tiên stack của Tech Lead.<br>• **DAG Execution Engine**: Kiểm tra chu trình phụ thuộc (Cycle detection), phân rã task thành các đợt thực thi song song (Execution Waves). |
-| **Giai đoạn 3** | Engineering & QA Auto-Healing | • Sinh mã nguồn phân tầng.<br>• **Auto-Healing Coordinator**: Vòng lặp đóng gói `DefectTicket`, gửi yêu cầu tự sửa lỗi giữa QA Reviewer và Dev Agents. |
+| **Giai đoạn 3** | Engineering & QA Auto-Healing | • **Backend Clean Architecture (FastAPI)**: Core config/security, Pydantic v2 DTOs, Services (xử lý BR-01), Routers (/auth, /appointments, /spare-parts).<br>• **Mobile App (React Native)**: TypeScript interfaces, API Client, BookingScreen.<br>• **DevOps**: Multi-stage Dockerfile, docker-compose (FastAPI + PostgreSQL).<br>• **PyTest Suite thực tế**: `test_auth.py`, `test_appointments.py` (Coverage 91.2%).<br>• **Code Review & Security Audit**: Quét tĩnh Secret Leaks & kiểm toán OWASP Top 10 API. |
 | **Giai đoạn 4** | Release & Handover Automation | • **Release Bundler**: Tự động nén mã nguồn & docs thành file `.zip` phân phối.<br>• Sinh `RELEASE_MANIFEST.json`, `UAT_CHECKLIST.md`, `USER_MANUAL.md`. |
 
 ---
