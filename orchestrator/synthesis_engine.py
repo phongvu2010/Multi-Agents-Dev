@@ -113,9 +113,11 @@ class AdaptiveCodeSynthesizer:
 
         # 1. Core Config (Pydantic Settings - Zero Hardcoded Secret)
         (app_dir / "core" / "config.py").write_text(f'''import os
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
+    model_config = SettingsConfigDict(case_sensitive=True)
+
     PROJECT_NAME: str = "{domain_info['project_name']} API"
     VERSION: str = "1.0.0"
     API_V1_STR: str = "/api/v1"
@@ -124,9 +126,6 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 15
     DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///./data.db")
     MAX_SLOT_CAPACITY: int = {domain_info['max_slot']}  # {domain_info['rule_desc']}
-
-    class Config:
-        case_sensitive = True
 
 settings = Settings()
 ''', encoding="utf-8")
@@ -204,7 +203,7 @@ def get_db() -> Generator[Session, None, None]:
         # 4. Models (SQLAlchemy 2.0 Mapped Declarative)
         (app_dir / "models" / "user.py").write_text('''from sqlalchemy import String, DateTime
 from sqlalchemy.orm import Mapped, mapped_column
-from datetime import datetime
+from datetime import datetime, timezone
 from app.core.database import Base
 
 class UserModel(Base):
@@ -215,7 +214,7 @@ class UserModel(Base):
     full_name: Mapped[str] = mapped_column(String(100), nullable=False)
     password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
     role: Mapped[str] = mapped_column(String(20), default="CUSTOMER")
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
 ''', encoding="utf-8")
 
         (app_dir / "models" / "catalog.py").write_text(f'''from sqlalchemy import String, Float, Integer, Boolean
@@ -234,7 +233,7 @@ class CatalogItemModel(Base):
 
         (app_dir / "models" / "order.py").write_text(f'''from sqlalchemy import String, Float, DateTime
 from sqlalchemy.orm import Mapped, mapped_column
-from datetime import datetime
+from datetime import datetime, timezone
 from app.core.database import Base
 
 class OrderModel(Base):
@@ -247,7 +246,7 @@ class OrderModel(Base):
     status: Mapped[str] = mapped_column(String(30), default="CONFIRMED")
     total_amount: Mapped[float] = mapped_column(Float, default={domain_info['default_price']})
     notes: Mapped[str] = mapped_column(String(255), nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
 ''', encoding="utf-8")
 
         # 5. Schemas (Pydantic v2 DTOs)
@@ -268,7 +267,7 @@ class TokenResponse(BaseModel):
     role: str = "CUSTOMER"
 ''', encoding="utf-8")
 
-        (app_dir / "schemas" / "order.py").write_text('''from pydantic import BaseModel, Field
+        (app_dir / "schemas" / "order.py").write_text('''from pydantic import BaseModel, Field, ConfigDict
 from typing import Optional
 
 class OrderCreateRequest(BaseModel):
@@ -277,28 +276,26 @@ class OrderCreateRequest(BaseModel):
     notes: Optional[str] = Field(None)
 
 class OrderResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: str
     item_id: str
     scheduled_time: str
     status: str
     total_amount: float
     notes: Optional[str] = None
-
-    class Config:
-        from_attributes = True
 ''', encoding="utf-8")
 
-        (app_dir / "schemas" / "catalog.py").write_text('''from pydantic import BaseModel
+        (app_dir / "schemas" / "catalog.py").write_text('''from pydantic import BaseModel, ConfigDict
 
 class CatalogItemResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: str
     name: str
     price: float
     stock_quantity: int
     is_active: bool
-
-    class Config:
-        from_attributes = True
 ''', encoding="utf-8")
 
         # 6. Repositories (Data Access Layer via SQLAlchemy 2.0)
@@ -372,8 +369,8 @@ class CatalogRepository:
         return items
 ''', encoding="utf-8")
 
-        # 7. Services (Business Logic & BR-01 Capacity Enforcement)
-        (app_dir / "services" / "order_service.py").write_text(f'''from typing import List
+        (app_dir / "services" / "order_service.py").write_text(f'''import uuid
+from typing import List
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 from app.core.config import settings
@@ -393,7 +390,7 @@ class OrderService:
                 detail=f"Khung giờ {{scheduled_time}} đã đạt giới hạn tối đa {{settings.MAX_SLOT_CAPACITY}} yêu cầu. Vui lòng chọn khung giờ khác!"
             )
 
-        order_id = f"ORD_{{current_count + 1001}}"
+        order_id = f"ORD_{{uuid.uuid4().hex[:8].upper()}}"
         return self.repo.create(
             order_id=order_id,
             item_id=item_id,

@@ -1,3 +1,4 @@
+import uuid
 from typing import List
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
@@ -18,7 +19,7 @@ class OrderService:
                 detail=f"Khung giờ {scheduled_time} đã đạt giới hạn tối đa {settings.MAX_SLOT_CAPACITY} yêu cầu. Vui lòng chọn khung giờ khác!"
             )
 
-        order_id = f"ORD_{current_count + 1001}"
+        order_id = f"ORD_{uuid.uuid4().hex[:8].upper()}"
         return self.repo.create(
             order_id=order_id,
             item_id=item_id,

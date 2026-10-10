@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from typing import Optional
 
 class OrderCreateRequest(BaseModel):
@@ -7,12 +7,11 @@ class OrderCreateRequest(BaseModel):
     notes: Optional[str] = Field(None)
 
 class OrderResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: str
     item_id: str
     scheduled_time: str
     status: str
     total_amount: float
     notes: Optional[str] = None
-
-    class Config:
-        from_attributes = True

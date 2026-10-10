@@ -55,9 +55,9 @@ class AgentFactory:
 
     def __init__(self, base_dir: Path, api_key: Optional[str] = None):
         self.base_dir = base_dir
-        self.skills_dir = base_dir / "skills"
+        self.skills_dir = (base_dir / ".agents" / "skills") if (base_dir / ".agents" / "skills").exists() else (base_dir / "skills")
         self.prompts_dir = base_dir / "config" / "prompts"
-        self.rules_dir = base_dir / "rules"
+        self.rules_dir = (base_dir / ".agents" / "rules") if (base_dir / ".agents" / "rules").exists() else (base_dir / "rules")
         self.api_key = api_key or os.getenv("GEMINI_API_KEY")
 
     def _read_prompt(self, filename: str) -> str:
