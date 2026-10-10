@@ -518,6 +518,7 @@ app.include_router(catalog.router, prefix=settings.API_V1_STR)
         (self.backend_dir / "requirements.txt").write_text('''fastapi>=0.110.0
 uvicorn>=0.28.0
 sqlalchemy>=2.0.0
+alembic>=1.13.0
 pydantic>=2.6.0
 pydantic-settings>=2.2.0
 python-jose[cryptography]>=3.3.0
@@ -525,6 +526,211 @@ passlib[bcrypt]>=1.7.4
 pytest>=8.0.0
 httpx>=0.27.0
 asyncpg>=0.29.0
+''', encoding="utf-8")
+
+        # 11. Database Migrations (Alembic)
+        self.synthesize_alembic(domain_info)
+
+    def synthesize_alembic(self, domain_info: Dict[str, Any]) -> None:
+        """Sinh cấu hình và thư mục Database Migrations Alembic hoàn chỉnh."""
+        alembic_dir = self.backend_dir / "alembic"
+        versions_dir = alembic_dir / "versions"
+        versions_dir.mkdir(parents=True, exist_ok=True)
+        (versions_dir / "__init__.py").write_text("", encoding="utf-8")
+
+        # 1. alembic.ini
+        (self.backend_dir / "alembic.ini").write_text("""[alembic]
+script_location = alembic
+prepend_sys_path = .
+version_path_separator = os
+sqlalchemy.url = sqlite:///./data.db
+
+[loggers]
+keys = root,sqlalchemy,alembic
+
+[handlers]
+keys = console
+
+[formatters]
+keys = generic
+
+[logger_root]
+level = WARN
+handlers = console
+qualname =
+
+[logger_sqlalchemy]
+level = WARN
+handlers =
+qualname = sqlalchemy.engine
+
+[logger_alembic]
+level = INFO
+handlers =
+qualname = alembic
+
+[handler_console]
+class = StreamHandler
+args = (sys.stderr,)
+level = NOTSET
+formatter = generic
+
+[formatter_generic]
+format = %(levelname)-5.5s [%(name)s] %(message)s
+datefmt = %H:%M:%S
+""", encoding="utf-8")
+
+        # 2. alembic/env.py
+        (alembic_dir / "env.py").write_text("""import sys
+import os
+from logging.config import fileConfig
+from sqlalchemy import engine_from_config, pool
+from alembic import context
+
+# Thêm thư mục backend vào sys.path
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
+from app.core.config import settings
+from app.core.database import Base
+from app.models.user import UserModel
+from app.models.catalog import CatalogItemModel
+from app.models.order import OrderModel
+
+config = context.config
+
+if config.config_file_name is not None:
+    fileConfig(config.config_file_name)
+
+target_metadata = Base.metadata
+
+def get_url():
+    return settings.DATABASE_URL
+
+def run_migrations_offline() -> None:
+    url = get_url()
+    context.configure(
+        url=url,
+        target_metadata=target_metadata,
+        literal_binds=True,
+        dialect_opts={"paramstyle": "named"},
+    )
+    with context.begin_transaction():
+        context.run_migrations()
+
+def run_migrations_online() -> None:
+    configuration = config.get_section(config.config_ini_section, {})
+    configuration["sqlalchemy.url"] = get_url()
+
+    connect_args = {"check_same_thread": False} if "sqlite" in get_url() else {}
+    connectable = engine_from_config(
+        configuration,
+        prefix="sqlalchemy.",
+        poolclass=pool.NullPool,
+        connect_args=connect_args,
+    )
+
+    with connectable.connect() as connection:
+        context.configure(
+            connection=connection,
+            target_metadata=target_metadata,
+        )
+        with context.begin_transaction():
+            context.run_migrations()
+
+if context.is_offline_mode():
+    run_migrations_offline()
+else:
+    run_migrations_online()
+""", encoding="utf-8")
+
+        # 3. alembic/script.py.mako
+        (alembic_dir / "script.py.mako").write_text('''"""${message}
+
+Revision ID: ${up_revision}
+Revises: ${down_revision | comma,n}
+Create Date: ${create_date}
+
+"""
+from typing import Sequence, Union
+from alembic import op
+import sqlalchemy as sa
+${imports if imports else ""}
+
+revision: str = ${repr(up_revision)}
+down_revision: Union[str, None] = ${repr(down_revision)}
+branch_labels: Union[str, Sequence[str], None] = ${repr(branch_labels)}
+depends_on: Union[str, Sequence[str], None] = ${repr(depends_on)}
+
+def upgrade() -> None:
+    ${upgrades if upgrades else "pass"}
+
+def downgrade() -> None:
+    ${downgrades if downgrades else "pass"}
+''', encoding="utf-8")
+
+        # 4. alembic/versions/0001_initial_schema.py
+        (versions_dir / "0001_initial_schema.py").write_text(f'''"""Initial schema migration
+
+Revision ID: 0001_initial_schema
+Revises: 
+Create Date: 2026-10-10 21:00:00.000000
+
+"""
+from typing import Sequence, Union
+from alembic import op
+import sqlalchemy as sa
+
+revision: str = "0001_initial_schema"
+down_revision: Union[str, None] = None
+branch_labels: Union[str, Sequence[str], None] = None
+depends_on: Union[str, Sequence[str], None] = None
+
+def upgrade() -> None:
+    # 1. Bảng users
+    op.create_table(
+        "users",
+        sa.Column("id", sa.Integer(), autoincrement=True, nullable=False),
+        sa.Column("phone_number", sa.String(length=20), nullable=False),
+        sa.Column("full_name", sa.String(length=100), nullable=False),
+        sa.Column("password_hash", sa.String(length=255), nullable=False),
+        sa.Column("role", sa.String(length=20), server_default="CUSTOMER", nullable=False),
+        sa.Column("created_at", sa.DateTime(), nullable=False),
+        sa.PrimaryKeyConstraint("id"),
+    )
+    op.create_index(op.f("ix_users_phone_number"), "users", ["phone_number"], unique=True)
+
+    # 2. Bảng catalog_items
+    op.create_table(
+        "catalog_items",
+        sa.Column("id", sa.String(length=50), nullable=False),
+        sa.Column("name", sa.String(length=150), nullable=False),
+        sa.Column("price", sa.Float(), nullable=False),
+        sa.Column("stock_quantity", sa.Integer(), server_default="100", nullable=False),
+        sa.Column("is_active", sa.Boolean(), server_default="true", nullable=False),
+        sa.PrimaryKeyConstraint("id"),
+    )
+
+    # 3. Bảng orders
+    op.create_table(
+        "orders",
+        sa.Column("id", sa.String(length=50), nullable=False),
+        sa.Column("user_id", sa.String(length=50), server_default="guest_user", nullable=False),
+        sa.Column("item_id", sa.String(length=50), nullable=False),
+        sa.Column("scheduled_time", sa.String(length=50), nullable=False),
+        sa.Column("status", sa.String(length=30), server_default="CONFIRMED", nullable=False),
+        sa.Column("total_amount", sa.Float(), nullable=False),
+        sa.Column("notes", sa.String(length=255), nullable=True),
+        sa.Column("created_at", sa.DateTime(), nullable=False),
+        sa.PrimaryKeyConstraint("id"),
+    )
+    op.create_index(op.f("ix_orders_scheduled_time"), "orders", ["scheduled_time"], unique=False)
+
+def downgrade() -> None:
+    op.drop_index(op.f("ix_orders_scheduled_time"), table_name="orders")
+    op.drop_table("orders")
+    op.drop_table("catalog_items")
+    op.drop_index(op.f("ix_users_phone_number"), table_name="users")
+    op.drop_table("users")
 ''', encoding="utf-8")
 
     def synthesize_frontend(self, domain_info: Dict[str, Any]) -> None:

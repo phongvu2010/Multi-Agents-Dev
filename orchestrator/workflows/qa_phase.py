@@ -160,14 +160,62 @@ def test_health_check_and_catalog():
         console.print(f"    [bold red]✗ PyTest phát hiện lỗi kiểm thử (Exit Code {test_exit_code})![/bold red]")
         failed_tests = 1
         passed_tests = max(0, total_tests - failed_tests)
-        defects.append(DefectTicket(
+
+        # Trích xuất file gây lỗi từ pytest traceback
+        failed_file = "backend/app/services/order_service.py"
+        file_match = re.search(r"((?:app|routers|services|models|repositories|core)/[a-zA-Z0-9_/]+\.py)", f"{pytest_stdout}\n{pytest_stderr}")
+        if file_match:
+            raw_matched = file_match.group(1)
+            if not raw_matched.startswith("app/"):
+                failed_file = f"backend/app/{raw_matched}"
+            else:
+                failed_file = f"backend/{raw_matched}"
+
+        defect_item = DefectTicket(
             id="DEF-01",
             target_team="backend",
-            file_path="backend/app/routers/orders.py",
+            file_path=failed_file,
             severity="HIGH",
-            issue_description=f"PyTest suite failed:\n{pytest_stdout}\n{pytest_stderr}",
-            suggested_fix="Kiểm tra lại route handler và điều kiện kiểm tra slot capacity."
-        ))
+            issue_description=f"PyTest suite failed with exit code {test_exit_code}",
+            stack_trace=f"{pytest_stdout}\n{pytest_stderr}",
+            suggested_fix="Phân tích PyTest stack trace và sửa lỗi trong code để test case PASS."
+        )
+        defects.append(defect_item)
+
+        # KÍCH HOẠT LLM-POWERED AUTO-HEALING VỚI SUB-TEAM 3
+        coordinator = AutoHealingCoordinator(max_iterations=state.max_iterations)
+        async def retest_runner():
+            p = subprocess.run(
+                [sys.executable, "-m", "pytest", str(tests_dir), "-v"],
+                cwd=str(backend_dir),
+                env=env,
+                capture_output=True,
+                text=True,
+                timeout=30
+            )
+            return p.returncode == 0, p.stdout, p.stderr
+
+        healed = await coordinator.run_auto_healing_cycle(
+            defects=defects,
+            agent_factory=factory,
+            workspace_dir=backend_dir.parent,
+            test_runner_fn=retest_runner
+        )
+        if healed:
+            test_exit_code = 0
+            p_final = subprocess.run(
+                [sys.executable, "-m", "pytest", str(tests_dir), "-v"],
+                cwd=str(backend_dir),
+                env=env,
+                capture_output=True,
+                text=True,
+                timeout=30
+            )
+            pytest_stdout = p_final.stdout
+            passed_matches = re.findall(r"PASSED", pytest_stdout)
+            total_tests = len(passed_matches) if passed_matches else 3
+            passed_tests = total_tests
+            failed_tests = 0
 
     # =========================================================================
     # BƯỚC 4.2b: KIỂM THỬ TỰ ĐỘNG FRONTEND / MOBILE (SYNTAX & TYPESCRIPT VALIDATION)
@@ -222,14 +270,18 @@ def test_health_check_and_catalog():
                 secret_leaks_found.append(str(pf.name))
 
     if secret_leaks_found:
-        defects.append(DefectTicket(
+        sec_file = f"backend/app/core/{secret_leaks_found[0]}" if (backend_dir / "app" / "core" / secret_leaks_found[0]).exists() else f"backend/app/{secret_leaks_found[0]}"
+        sec_defect = DefectTicket(
             id="DEF-SEC-01",
             target_team="backend",
-            file_path=secret_leaks_found[0],
+            file_path=sec_file,
             severity="CRITICAL",
             issue_description=f"Phát hiện hardcoded secret trong file: {secret_leaks_found}",
-            suggested_fix="Chuyển toàn bộ secret key sang biến môi trường đọc qua Pydantic BaseSettings."
-        ))
+            suggested_fix="Chuyển toàn bộ secret key sang biến môi trường đọc qua Pydantic SettingsConfigDict."
+        )
+        defects.append(sec_defect)
+        coordinator = AutoHealingCoordinator(max_iterations=1)
+        await coordinator.execute_healing(sec_defect, factory, backend_dir.parent)
 
     security_report_path = qa_dir / "security_audit_report.md"
     security_content = f"""# BÁO CÁO KIỂM TOÁN AN TOÀN BẢO MẬT (SECURITY AUDIT)

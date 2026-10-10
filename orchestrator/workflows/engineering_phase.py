@@ -40,11 +40,18 @@ async def run_engineering_phase(
             title="[bold red]Auto-Healing Loop In Progress[/bold red]",
             border_style="yellow"
         ))
-        # Quét các file cần vá
-        if "secret" in review_feedback.lower():
-            synthesizer.apply_auto_healing_patch("backend/app/core/config.py", "secret leak", "Chuyển secret sang BaseSettings")
-        if "capacity" in review_feedback.lower() or "slot" in review_feedback.lower():
-            synthesizer.apply_auto_healing_patch("backend/app/routers/orders.py", "slot capacity", "Kiểm tra giới hạn")
+        from orchestrator.auto_healing import AutoHealingCoordinator, DefectTicket
+        target_heal_file = "backend/app/routers/orders.py" if ("order" in review_feedback.lower() or "slot" in review_feedback.lower() or "capacity" in review_feedback.lower()) else "backend/app/core/config.py"
+        feedback_defect = DefectTicket(
+            id="DEF-HITL-REVISION",
+            target_team="backend",
+            file_path=target_heal_file,
+            severity="HIGH",
+            issue_description=review_feedback,
+            suggested_fix=f"Cập nhật mã nguồn theo yêu cầu của Reviewer: {review_feedback}"
+        )
+        coordinator = AutoHealingCoordinator(max_iterations=1)
+        await coordinator.execute_healing(feedback_defect, factory, project_workspace)
 
     # 2. Phân tích DAG Tasks
     tasks_dag_path = Path(state.artifacts.get("tasks_dag", ""))
