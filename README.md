@@ -120,9 +120,14 @@ cp .env.example .env
 
 ### 2. Các chế độ khởi chạy
 
-- **Chạy chu trình đầy đủ (tương tác trực tiếp tại 3 cổng Gate):**
+- **Chạy với file yêu cầu thô từ khách hàng (Khuyên dùng):**
   ```bash
-  python -m orchestrator.runner --project "Ten_Du_An"
+  python -m orchestrator.runner --project "Ten_Du_An" --input-file "workspaces/sample_client_brief.md"
+  ```
+
+- **Chạy truyền trực tiếp yêu cầu qua dòng lệnh:**
+  ```bash
+  python -m orchestrator.runner --project "Ten_Du_An" --requirements "Tôi muốn làm app bán hoa tươi có giao hàng trong 2h..."
   ```
 
 - **Khôi phục phiên làm việc bị gián đoạn (Resume từ Checkpoint):**

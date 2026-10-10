@@ -256,6 +256,8 @@ class SDLCOrchestrator:
 def main():
     parser = argparse.ArgumentParser(description="Multi-Agents SDLC Orchestrator")
     parser.add_argument("--project", default="MotoCare_SmartApp", help="Tên dự án phần mềm")
+    parser.add_argument("--input-file", help="Đường dẫn file chứa yêu cầu thô từ khách hàng (.txt hoặc .md)")
+    parser.add_argument("--requirements", help="Chuỗi văn bản yêu cầu thô truyền trực tiếp qua dòng lệnh")
     parser.add_argument("--resume", action="store_true", help="Khôi phục phiên làm việc từ Checkpoint gần nhất")
     parser.add_argument("--no-hitl", action="store_true", help="Tự động bypass các cổng HITL (Dành cho CI/CD test)")
     args = parser.parse_args()
@@ -265,15 +267,27 @@ def main():
         hitl_enabled=not args.no_hitl
     )
 
-    sample_requirements = (
-        "Chúng tôi muốn xây dựng ứng dụng di động cho phép khách hàng đặt lịch hẹn bảo dưỡng xe máy, "
-        "nhận thông báo khi xe sửa xong, xem bảng giá phụ tùng minh bạch và thanh toán online hoặc tại quầy. "
-        "Hệ thống cần có trang quản trị cho nhân viên tiếp nhận xe và quản lý kho linh kiện."
-    )
+    raw_req = ""
+    if args.input_file:
+        input_path = Path(args.input_file)
+        if input_path.exists():
+            raw_req = input_path.read_text(encoding="utf-8")
+            console.print(f"[bold cyan]Đã nạp yêu cầu thô từ file:[/bold cyan] {input_path}")
+        else:
+            console.print(f"[bold red]Lỗi: Không tìm thấy file {input_path}[/bold red]")
+            sys.exit(1)
+    elif args.requirements:
+        raw_req = args.requirements
+    else:
+        raw_req = (
+            "Chúng tôi muốn xây dựng ứng dụng di động cho phép khách hàng đặt lịch hẹn bảo dưỡng xe máy, "
+            "nhận thông báo khi xe sửa xong, xem bảng giá phụ tùng minh bạch và thanh toán online hoặc tại quầy. "
+            "Hệ thống cần có trang quản trị cho nhân viên tiếp nhận xe và quản lý kho linh kiện."
+        )
 
     asyncio.run(orchestrator.execute_lifecycle(
         project_name=args.project,
-        raw_requirements=sample_requirements,
+        raw_requirements=raw_req,
         resume=args.resume
     ))
 
