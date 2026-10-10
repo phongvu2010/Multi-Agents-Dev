@@ -1,0 +1,22 @@
+# Cấu hình hồ sơ và năng lực chuyên môn của Tech Lead / Reviewer
+tech_lead:
+  name: "Tech Lead & Solution Reviewer"
+  familiar_stacks:
+    backend:
+      - "Python (FastAPI)"
+      - "Node.js (Express / NestJS / Fastify)"
+    mobile_frontend:
+      - "React Native"
+      - "React / Next.js (TypeScript)"
+    database:
+      - "PostgreSQL"
+      - "MongoDB"
+      - "Redis"
+
+  architectural_preference:
+    strategy: "prioritize_familiar_when_suitable"
+    explanation: >
+      Hệ thống tự chủ phân tích bài toán để chọn kiến trúc tối ưu. Tuy nhiên,
+      khi có nhiều phương án công nghệ tương đồng về hiệu năng và yêu cầu nghiệp vụ,
+      hệ thống PHẢI ưu tiên lựa chọn Python/FastAPI (Backend) và React Native / Node.js
+      để Tech Lead có thể dễ dàng review thủ công, kiểm soát rủi ro và bảo trì lâu dài.

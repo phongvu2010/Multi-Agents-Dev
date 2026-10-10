@@ -1,0 +1,49 @@
+# Cấu hình 3 chốt chặn phê duyệt của con người (Human-in-the-Loop Quality Gates)
+hitl_gates:
+  gate_1_prd:
+    id: "gate_1_prd_approval"
+    name: "Gate 1: Phê duyệt Yêu cầu & PRD"
+    stage: "post_discovery"
+    role_required: "Product Owner / Tech Lead"
+    description: >
+      Dừng lại sau khi Sub-Team 1 (Client Liaison, BA/PO, UI/UX Concept) hoàn thành tài liệu
+      làm rõ yêu cầu, PRD và User Stories. Con người kiểm tra xem phạm vi (Scope), tính năng
+      và Acceptance Criteria (Gherkin) đã chính xác và đủ để triển khai chưa.
+    artifacts_to_review:
+      - "artifacts/01_discovery/PRD.md"
+      - "artifacts/01_discovery/user_stories.json"
+      - "artifacts/01_discovery/clarification_qna.md"
+    blocking: true
+
+  gate_2_architecture:
+    id: "gate_2_architecture_signoff"
+    name: "Gate 2: Phê duyệt Thiết kế Kiến trúc Kỹ thuật & API Contract"
+    stage: "post_architecture"
+    role_required: "Tech Lead / Principal Architect"
+    description: >
+      Dừng lại sau khi Sub-Team 2 (System Architect, Security Architect, TPM) hoàn thành
+      bản thiết kế kiến trúc, ERD và API Contract (OpenAPI specification). Con người kiểm tra
+      việc chọn Tech Stack (đảm bảo ưu tiên Python/FastAPI + React Native/Node.js nếu phù hợp),
+      thiết kế Database và bảo mật trước khi cho phép các Dev Agents bắt đầu viết mã nguồn.
+    artifacts_to_review:
+      - "artifacts/02_architecture/architecture_design.md"
+      - "artifacts/02_architecture/openapi.yaml"
+      - "artifacts/02_architecture/erd.mermaid"
+      - "artifacts/02_architecture/task_backlog_dag.json"
+    blocking: true
+
+  gate_3_deploy:
+    id: "gate_3_deploy_signoff"
+    name: "Gate 3: Cấp phép Triển khai & Nghiệm thu Bàn giao"
+    stage: "post_qa"
+    role_required: "Tech Lead / Release Manager"
+    description: >
+      Dừng lại sau khi Sub-Team 4 (Code Reviewer, QA Automation, Security Auditor) hoàn thành
+      các bước review, kiểm thử unit/e2e và rà soát lỗ hổng. Con người bấm nút phê duyệt cuối cùng
+      để hệ thống đóng gói, triển khai và bàn giao cho khách hàng (kèm User Manual, UAT Checklist).
+    artifacts_to_review:
+      - "artifacts/04_quality/code_review_report.md"
+      - "artifacts/04_quality/test_summary.json"
+      - "artifacts/04_quality/security_audit_report.md"
+      - "artifacts/05_handover/client_handover_package.md"
+    blocking: true
