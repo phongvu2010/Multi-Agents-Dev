@@ -1,0 +1,20 @@
+openapi: 3.0.3
+info:
+  title: API Specification
+  version: 1.0.0
+  description: API Contracts chuẩn hóa sinh ra bởi System Architect Agent.
+paths:
+  /api/v1/health:
+    get:
+      summary: Health check endpoint
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "healthy"

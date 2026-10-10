@@ -13,6 +13,7 @@ hitl_gates:
       - "artifacts/01_discovery/PRD.md"
       - "artifacts/01_discovery/user_stories.json"
       - "artifacts/01_discovery/clarification_qna.md"
+      - "artifacts/01_discovery/ui_ux_specifications.md"
     blocking: true
 
   gate_2_architecture:
@@ -22,13 +23,14 @@ hitl_gates:
     role_required: "Tech Lead / Principal Architect"
     description: >
       Dừng lại sau khi Sub-Team 2 (System Architect, Security Architect, TPM) hoàn thành
-      bản thiết kế kiến trúc, ERD và API Contract (OpenAPI specification). Con người kiểm tra
-      việc chọn Tech Stack (đảm bảo ưu tiên Python/FastAPI + React Native/Node.js nếu phù hợp),
-      thiết kế Database và bảo mật trước khi cho phép các Dev Agents bắt đầu viết mã nguồn.
+      bản thiết kế kiến trúc, ERD, mô hình bảo mật STRIDE và API Contract (OpenAPI specification).
+      Con người kiểm tra việc chọn Tech Stack (ưu tiên Python/FastAPI + React Native/Node.js),
+      thiết kế Database và ma trận phân quyền RBAC trước khi cho phép các Dev Agents bắt đầu viết mã.
     artifacts_to_review:
       - "artifacts/02_architecture/architecture_design.md"
       - "artifacts/02_architecture/openapi.yaml"
       - "artifacts/02_architecture/erd.mermaid"
+      - "artifacts/02_architecture/security_architecture.md"
       - "artifacts/02_architecture/task_backlog_dag.json"
     blocking: true
 

@@ -96,21 +96,41 @@ Multi-Agents-Dev/
 
 ---
 
+## 🗺️ Lộ Trình 4 Giai Đoạn Đã Hoàn Thiện
+
+Hệ thống đã hoàn thiện trọn vẹn cả **4 Giai đoạn cốt lõi** theo đúng lộ trình thiết kế:
+
+| Giai đoạn | Trọng tâm công nghệ | Thành phần đã hiện thực |
+|---|---|---|
+| **Giai đoạn 1** | Khung sườn & Phase Discovery | • Orchestrator State Machine.<br>• Sub-Team 1 bóc tách PRD, User Stories, Gherkin.<br>• **State Persistence**: Lưu checkpoint tự động, khôi phục bằng cờ `--resume`. |
+| **Giai đoạn 2** | Architecture & Task Decomposition | • System Architect ưu tiên stack của Tech Lead.<br>• **DAG Execution Engine**: Kiểm tra chu trình phụ thuộc (Cycle detection), phân rã task thành các đợt thực thi song song (Execution Waves). |
+| **Giai đoạn 3** | Engineering & QA Auto-Healing | • Sinh mã nguồn phân tầng.<br>• **Auto-Healing Coordinator**: Vòng lặp đóng gói `DefectTicket`, gửi yêu cầu tự sửa lỗi giữa QA Reviewer và Dev Agents. |
+| **Giai đoạn 4** | Release & Handover Automation | • **Release Bundler**: Tự động nén mã nguồn & docs thành file `.zip` phân phối.<br>• Sinh `RELEASE_MANIFEST.json`, `UAT_CHECKLIST.md`, `USER_MANUAL.md`. |
+
+---
+
 ## 🚀 Hướng Dẫn Vận Hành
 
 ### 1. Cài đặt môi trường
 ```bash
 pip install -r requirements.txt
 cp .env.example .env
-# Thêm GEMINI_API_KEY vào file .env
+# Thêm GEMINI_API_KEY vào file .env nếu cần gọi API thực
 ```
 
-### 2. Khởi chạy chu trình phát triển
-```bash
-python -m orchestrator.runner
-```
+### 2. Các chế độ khởi chạy
 
-Hệ thống sẽ chạy qua từng Sub-Team và hiển thị bảng kiểm duyệt tương tác tại các Gate 1, Gate 2 và Gate 3 để bạn trực tiếp ra quyết định:
-- Nhấn `1`: Phê duyệt (Approve) và tiếp tục.
-- Nhấn `2`: Yêu cầu sửa đổi (Request Revision) và nhập ghi chú để AI làm lại.
-- Nhấn `3`: Từ chối / Hủy (Reject).
+- **Chạy chu trình đầy đủ (tương tác trực tiếp tại 3 cổng Gate):**
+  ```bash
+  python -m orchestrator.runner --project "Ten_Du_An"
+  ```
+
+- **Khôi phục phiên làm việc bị gián đoạn (Resume từ Checkpoint):**
+  ```bash
+  python -m orchestrator.runner --project "Ten_Du_An" --resume
+  ```
+
+- **Chạy tự động không dừng (Dành cho CI/CD test):**
+  ```bash
+  python -m orchestrator.runner --project "Ten_Du_An" --no-hitl
+  ```

@@ -1,0 +1,14 @@
+erDiagram
+    USER ||--o{ REQ_LOG : creates
+    USER {
+        uuid id PK
+        string email UK
+        string password_hash
+        datetime created_at
+    }
+    REQ_LOG {
+        uuid id PK
+        uuid user_id FK
+        string action
+        datetime timestamp
+    }

@@ -1,0 +1,43 @@
+{
+  "tasks": [
+    {
+      "id": "TASK-BE-01",
+      "team": "backend",
+      "title": "Setup FastAPI scaffold & database models",
+      "depends_on": []
+    },
+    {
+      "id": "TASK-BE-02",
+      "team": "backend",
+      "title": "Implement core REST endpoints & Pydantic schemas",
+      "depends_on": [
+        "TASK-BE-01"
+      ]
+    },
+    {
+      "id": "TASK-FE-01",
+      "team": "frontend",
+      "title": "Setup React Native navigation & API client",
+      "depends_on": [
+        "TASK-BE-01"
+      ]
+    },
+    {
+      "id": "TASK-FE-02",
+      "team": "frontend",
+      "title": "Build screens and integrate state management",
+      "depends_on": [
+        "TASK-FE-01",
+        "TASK-BE-02"
+      ]
+    },
+    {
+      "id": "TASK-DEVOPS-01",
+      "team": "devops",
+      "title": "Docker-compose for PostgreSQL, Backend & App",
+      "depends_on": [
+        "TASK-BE-01"
+      ]
+    }
+  ]
+}

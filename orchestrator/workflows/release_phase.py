@@ -111,6 +111,12 @@ python main.py
     state.artifacts["uat_checklist"] = str(uat_checklist_path)
     state.artifacts["user_manual"] = str(user_manual_path)
     state.artifacts["project_readme"] = str(readme_path)
+
+    # Đóng gói sản phẩm thành file ZIP phân phối (Giai đoạn 4)
+    from orchestrator.release_bundler import ReleaseBundler
+    bundler = ReleaseBundler(artifacts_dir=output_dir, output_project_dir=project_workspace)
+    bundler.bundle_release_package(state)
+
     state.current_phase = SDLCPhase.COMPLETED
     state.is_success = True
 
