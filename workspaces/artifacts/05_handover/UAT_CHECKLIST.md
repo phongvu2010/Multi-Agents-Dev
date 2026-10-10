@@ -1,5 +1,5 @@
 # BẢNG KIỂM NGHIỆM THU NGƯỜI DÙNG CUỐI (UAT ACCEPTANCE CHECKLIST)
-**Dự án:** EduMaster_App
+**Dự án:** MotoCare_Upgrade
 
 | Mã Test | Tên Chức Năng | Các Bước Thực Hiện | Kết Quả Kỳ Vọng | Kết Quả Thực Tế | Đánh Giá |
 |---|---|---|---|---|---|

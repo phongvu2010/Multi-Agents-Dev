@@ -1,5 +1,5 @@
 # TÀI LIỆU THIẾT KẾ KIẾN TRÚC HỆ THỐNG (SYSTEM ARCHITECTURE)
-**Dự án:** EduMaster_App
+**Dự án:** MotoCare_Upgrade
 **Phiên bản:** 1.0.0 (Release Candidate)
 **Trưởng ban Kiến trúc:** System Architect Agent & Tech Lead
 

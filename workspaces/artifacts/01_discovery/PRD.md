@@ -1,5 +1,5 @@
 # PRODUCT REQUIREMENTS DOCUMENT (PRD) - v1.0.0
-**Dự án:** EduMaster_App
+**Dự án:** MotoCare_Upgrade
 **Tác giả:** Business Analyst Agent & Tech Lead
 **Ngày ban hành:** 2026-10-10
 **Trạng thái:** DRAFT HOÀN CHỈNH (Chờ phê duyệt tại Gate 1)
@@ -11,7 +11,7 @@
 - **Mục tiêu SMART:**
   - Giảm 70% thời gian xử lý đơn hàng và phục vụ khách hàng mua Phụ tùng & Dịch vụ Sửa chữa Xe.
   - Minh bạch 100% bảng giá và trạng thái xử lý đơn hàng theo thời gian thực.
-  - Tuân thủ triệt để quy tắc vận hành cốt lõi: Giới hạn tối đa 5 xe mỗi khung giờ (BR-01).
+  - Tuân thủ triệt để quy tắc vận hành cốt lõi: Giới hạn tối đa 3 xe mỗi khung giờ (BR-01).
 
 ---
 
@@ -20,7 +20,7 @@
 | Mã Tính Năng | Tên Tính Năng | Mô Tả Tóm Tắt | Độ Ưu Tiên | Sub-Team Phụ Trách |
 |---|---|---|---|---|
 | **FR-01** | Xác thực & Phân quyền RBAC | Hỗ trợ đăng ký, đăng nhập JWT, phân quyền Customer, Staff, Admin | P0 (Must Have) | Backend & Mobile |
-| **FR-02** | Quản lý Đơn hàng & Lịch hẹn Phụ tùng & Dịch vụ Sửa chữa Xe | Tiếp nhận và kiểm soát dung lượng theo quy tắc: Giới hạn tối đa 5 xe mỗi khung giờ (BR-01) | P0 (Must Have) | Backend & Mobile |
+| **FR-02** | Quản lý Đơn hàng & Lịch hẹn Phụ tùng & Dịch vụ Sửa chữa Xe | Tiếp nhận và kiểm soát dung lượng theo quy tắc: Giới hạn tối đa 3 xe mỗi khung giờ (BR-01) | P0 (Must Have) | Backend & Mobile |
 | **FR-03** | Quản lý Danh mục & Bảng giá | Tra cứu, cập nhật tồn kho và giá bán của Phụ tùng & Dịch vụ Sửa chữa Xe | P0 (Must Have) | Backend & Mobile |
 | **FR-04** | Hóa đơn & Thanh toán QR | Tự động tính tổng tiền dịch vụ và sinh mã QR động thanh toán chuyển khoản | P0 (Must Have) | Backend |
 
@@ -30,7 +30,7 @@
 
 | Mã Quy Tắc | Tên Quy Tắc | Nội Dung Ràng Buộc | Tầng Xử Lý |
 |---|---|---|---|
-| **BR-01** | Ràng buộc giới hạn công suất | Giới hạn tối đa 5 xe mỗi khung giờ (BR-01) | Service |
+| **BR-01** | Ràng buộc giới hạn công suất | Giới hạn tối đa 3 xe mỗi khung giờ (BR-01) | Service |
 | **BR-02** | Thời hạn hiệu lực Access Token | JWT Access Token có thời hạn tối đa 15 phút, ký thuật toán HS256 | Core Security |
 
 ---
@@ -64,7 +64,7 @@ Scenario: Đặt dịch vụ vào khung giờ còn trống
   When người dùng bấm xác nhận đặt đơn
   Then hệ thống tạo đơn với trạng thái 'CONFIRMED' và trừ 1 slot còn trống
 
-Scenario: Từ chối khi vượt công suất (Giới hạn tối đa 5 xe mỗi khung giờ (BR-01))
+Scenario: Từ chối khi vượt công suất (Giới hạn tối đa 3 xe mỗi khung giờ (BR-01))
   Given khung giờ đã đạt ngưỡng giới hạn tối đa
   When người dùng cố gắng đặt thêm
   Then hệ thống từ chối với HTTP 400 Bad Request và thông báo 'Khung giờ đã đầy chỗ'

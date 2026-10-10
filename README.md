@@ -115,6 +115,12 @@ Multi-Agents-Dev/
 3. **Giai đoạn 3: Tích hợp Sâu Antigravity 2.0 & Interactive Review Artifacts**
    - Sinh tự động các tài liệu `review_gate_1_prd.md`, `review_gate_2_architecture.md`, `review_gate_3_deploy.md` với GitHub Alerts (`> [!IMPORTANT]`), đường dẫn file clickable, trạng thái file và Decision Log minh bạch.
 
+4. **Giai đoạn 4: Bộ Tinh Chỉnh Nâng Cao (Vibe Code & Subagents)**
+   - **Cân bằng Hybrid Code Synthesis:** Kết hợp Heuristic Domain Context với Deep LLM Dynamic Generation để làm giàu logic nghiệp vụ chuyên sâu.
+   - **Frontend React Native Đa Màn Hình:** Xây dựng đầy đủ 4 màn hình (`AuthScreen`, `CatalogScreen`, `BookingScreen`, `TrackingScreen`), REST API Client, State Store và bộ kiểm thử **Jest Unit Test Suite**.
+   - **Alembic Database Migrations:** Tự động tạo `alembic.ini`, `env.py`, version `0001_initial_schema.py` và module `migration_manager.py` cho PostgreSQL & SQLite.
+   - **Native Antigravity Subagents:** Thiết lập đầy đủ 5 Sub-Teams chuyên biệt tại `.agents/subteams/` để lập trình viên có thể tương tác trực tiếp qua Chat Canvas.
+
 ---
 
 ## 🚀 Hướng Dẫn Vận Hành

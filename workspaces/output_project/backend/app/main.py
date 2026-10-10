@@ -7,7 +7,7 @@ from app.routers import auth, orders, catalog, health
 app = FastAPI(
     title=settings.PROJECT_NAME,
     version=settings.VERSION,
-    description="Clean Architecture API cho EduMaster_App"
+    description="Clean Architecture API cho MotoCare_Upgrade"
 )
 
 app.add_middleware(
@@ -18,8 +18,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Khởi tạo bảng dữ liệu
+# Khởi tạo bảng dữ liệu & thực thi Alembic Migrations
 init_db()
+try:
+    from app.core.migration_manager import run_migrations
+    run_migrations()
+except Exception:
+    pass
 
 # Đăng ký Routers
 app.include_router(health.router, prefix=settings.API_V1_STR)

@@ -58,6 +58,7 @@ class AgentFactory:
         self.skills_dir = (base_dir / ".agents" / "skills") if (base_dir / ".agents" / "skills").exists() else (base_dir / "skills")
         self.prompts_dir = base_dir / "config" / "prompts"
         self.rules_dir = (base_dir / ".agents" / "rules") if (base_dir / ".agents" / "rules").exists() else (base_dir / "rules")
+        self.subteams_dir = base_dir / ".agents" / "subteams"
         self.api_key = api_key or os.getenv("GEMINI_API_KEY")
 
     def _read_prompt(self, filename: str) -> str:
@@ -226,6 +227,28 @@ TIÊU CHÍ REVIEW & BẢO MẬT:
             return Agent(LocalAgentConfig(**{k: v for k, v in config_kwargs.items() if v is not None}))
 
         return DynamicAgent("Release & Handover Sub-Team", system_instruction, api_key=self.api_key)
+
+    def list_subteams(self) -> list:
+        """Liệt kê danh sách các Native Sub-Teams được định nghĩa trong .agents/subteams."""
+        subteams = []
+        if self.subteams_dir.exists():
+            for sf in sorted(self.subteams_dir.glob("*.md")):
+                text = sf.read_text(encoding="utf-8")
+                match = re.search(r"^---\s*\n(.*?)\n---", text, re.DOTALL)
+                meta = {}
+                if match:
+                    for line in match.group(1).splitlines():
+                        if ":" in line:
+                            k, v = line.split(":", 1)
+                            meta[k.strip()] = v.strip()
+                subteams.append({
+                    "id": sf.stem,
+                    "name": meta.get("name", sf.stem),
+                    "role": meta.get("role", "SDLC Subagent"),
+                    "description": meta.get("description", ""),
+                    "path": str(sf)
+                })
+        return subteams
 
 
 class DynamicAgentResponse:

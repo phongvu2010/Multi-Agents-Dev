@@ -1,5 +1,5 @@
 # BIÊN BẢN LÀM RÕ YÊU CẦU KHÁCH HÀNG (CLARIFICATION Q&A)
-**Dự án:** EduMaster_App
+**Dự án:** MotoCare_Upgrade
 **Ngày lập:** 2026-10-10
 **Đơn vị thực hiện:** Sub-Team 1 (Client Liaison & BA Agent)
 
@@ -26,4 +26,4 @@ Hệ thống số hóa toàn diện quy trình cung ứng và đặt hàng Phụ
 |---|---|---|---|
 | **Q-01** | Khách hàng có bắt buộc phải đăng nhập trước khi xem danh mục Phụ tùng & Dịch vụ Sửa chữa Xe không? | Ảnh hưởng trực tiếp đến tỷ lệ chuyển đổi đơn hàng và trải nghiệm duyệt ban đầu. | Cho phép xem danh mục và giá công khai; chỉ bắt buộc đăng nhập khi bấm xác nhận đặt hàng. |
 | **Q-02** | Phương thức thanh toán trực tuyến ưu tiên trong pha MVP là gì? | Quyết định việc tích hợp cổng thanh toán và xử lý callback trạng thái. | Tích hợp thanh toán chuyển khoản qua mã QR động (VietQR) và thanh toán COD/tiền mặt. |
-| **Q-03** | Quy tắc khi số lượng yêu cầu trong một khung giờ vượt giới hạn (Giới hạn tối đa 5 xe mỗi khung giờ (BR-01))? | Nguy cơ quá tải hệ thống và trễ hẹn bàn giao cho khách. | Khóa tự động slot khi đạt ngưỡng tối đa; hiển thị cảnh báo gợi ý khung giờ kế tiếp. |
+| **Q-03** | Quy tắc khi số lượng yêu cầu trong một khung giờ vượt giới hạn (Giới hạn tối đa 3 xe mỗi khung giờ (BR-01))? | Nguy cơ quá tải hệ thống và trễ hẹn bàn giao cho khách. | Khóa tự động slot khi đạt ngưỡng tối đa; hiển thị cảnh báo gợi ý khung giờ kế tiếp. |

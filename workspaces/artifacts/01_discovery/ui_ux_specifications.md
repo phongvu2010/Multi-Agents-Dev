@@ -1,5 +1,5 @@
 # ĐẶC TẢ TRẢI NGHIỆM GIAO DIỆN (UI/UX SPECIFICATIONS)
-**Dự án:** EduMaster_App
+**Dự án:** MotoCare_Upgrade
 
 ## 1. SƠ ĐỒ ĐIỀU HƯỚNG MÀN HÌNH (NAVIGATION FLOW)
 

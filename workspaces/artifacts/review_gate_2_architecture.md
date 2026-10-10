@@ -14,10 +14,10 @@ Bảo mật: STRIDE Threat Model & Ma trận RBAC.
 
 | STT | Tập Tin / Tài Liệu | Đường Dẫn Tuyệt Đối | Dung Lượng | Trạng Thái |
 |---|---|---|---|---|
-| 1 | [architecture_design.md](/Users/hunterdo/Documents/Python Project/Multi-Agents-Dev/workspaces/artifacts/02_architecture/architecture_design.md) | `/Users/hunterdo/Documents/Python Project/Multi-Agents-Dev/workspaces/artifacts/02_architecture/architecture_design.md` | 3,880 bytes | ✅ Sẵn sàng |
-| 2 | [openapi.yaml](/Users/hunterdo/Documents/Python Project/Multi-Agents-Dev/workspaces/artifacts/02_architecture/openapi.yaml) | `/Users/hunterdo/Documents/Python Project/Multi-Agents-Dev/workspaces/artifacts/02_architecture/openapi.yaml` | 1,034 bytes | ✅ Sẵn sàng |
+| 1 | [architecture_design.md](/Users/hunterdo/Documents/Python Project/Multi-Agents-Dev/workspaces/artifacts/02_architecture/architecture_design.md) | `/Users/hunterdo/Documents/Python Project/Multi-Agents-Dev/workspaces/artifacts/02_architecture/architecture_design.md` | 3,883 bytes | ✅ Sẵn sàng |
+| 2 | [openapi.yaml](/Users/hunterdo/Documents/Python Project/Multi-Agents-Dev/workspaces/artifacts/02_architecture/openapi.yaml) | `/Users/hunterdo/Documents/Python Project/Multi-Agents-Dev/workspaces/artifacts/02_architecture/openapi.yaml` | 1,040 bytes | ✅ Sẵn sàng |
 | 3 | [erd.mermaid](/Users/hunterdo/Documents/Python Project/Multi-Agents-Dev/workspaces/artifacts/02_architecture/erd.mermaid) | `/Users/hunterdo/Documents/Python Project/Multi-Agents-Dev/workspaces/artifacts/02_architecture/erd.mermaid` | 533 bytes | ✅ Sẵn sàng |
-| 4 | [security_architecture.md](/Users/hunterdo/Documents/Python Project/Multi-Agents-Dev/workspaces/artifacts/02_architecture/security_architecture.md) | `/Users/hunterdo/Documents/Python Project/Multi-Agents-Dev/workspaces/artifacts/02_architecture/security_architecture.md` | 708 bytes | ✅ Sẵn sàng |
+| 4 | [security_architecture.md](/Users/hunterdo/Documents/Python Project/Multi-Agents-Dev/workspaces/artifacts/02_architecture/security_architecture.md) | `/Users/hunterdo/Documents/Python Project/Multi-Agents-Dev/workspaces/artifacts/02_architecture/security_architecture.md` | 711 bytes | ✅ Sẵn sàng |
 | 5 | [task_backlog_dag.json](/Users/hunterdo/Documents/Python Project/Multi-Agents-Dev/workspaces/artifacts/02_architecture/task_backlog_dag.json) | `/Users/hunterdo/Documents/Python Project/Multi-Agents-Dev/workspaces/artifacts/02_architecture/task_backlog_dag.json` | 999 bytes | ✅ Sẵn sàng |
 
 ---
@@ -33,7 +33,7 @@ Bảo mật: STRIDE Threat Model & Ma trận RBAC.
 ## 📋 KẾT QUẢ PHÊ DUYỆT (DECISION LOG)
 - **Trạng thái:** **APPROVED**
 - **Người ký duyệt:** `Automated System (Tech Lead / Principal Architect)`
-- **Thời gian:** `2026-10-10T21:27:19.716081`
+- **Thời gian:** `2026-10-10T22:07:07.252198`
 - **Ghi chú / Feedback:**
 > Auto-approved via non-interactive mode.
 

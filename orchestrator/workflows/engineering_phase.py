@@ -73,11 +73,23 @@ async def run_engineering_phase(
     domain_info = DomainAnalyzer.analyze(state.raw_requirements, project_name=state.project_name)
 
     # =========================================================================
-    # WAVE 1 & 2: CORE CONFIG, DATABASE, REPOSITORIES & SERVICES
+    # WAVE 1 & 2: CORE CONFIG, DATABASE, REPOSITORIES & SERVICES (HYBRID SYNTHESIS)
     # =========================================================================
-    console.print(f"  [bold cyan]► Wave 1: Khởi tạo Clean Architecture, SQLAlchemy 2.0 Engine & Models ({domain_info['primary_label']})...[/bold cyan]")
-    console.print(f"  [bold cyan]► Wave 2: Hiện thực hóa Services, Repositories & Quy tắc ({domain_info['rule_desc']})...[/bold cyan]")
-    synthesizer.synthesize_backend(domain_info)
+    console.print(f"  [bold cyan]► Wave 1 & 2: Sinh mã nguồn Clean Architecture Hybrid (SQLAlchemy 2.0 + Deep LLM)...[/bold cyan]")
+    arch_doc = ""
+    arch_path = Path(state.artifacts.get("architecture_design", ""))
+    if arch_path.exists():
+        try:
+            arch_doc = arch_path.read_text(encoding="utf-8")
+        except Exception:
+            arch_doc = ""
+
+    await synthesizer.synthesize_backend_hybrid(
+        domain_info=domain_info,
+        raw_requirements=state.raw_requirements,
+        architecture_design=arch_doc,
+        agent_factory=factory
+    )
 
     # =========================================================================
     # WAVE 3: ROUTERS & MOBILE FRONTEND (REACT NATIVE TYPESCRIPT)

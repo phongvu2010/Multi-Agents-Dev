@@ -1,5 +1,5 @@
 # BIÊN BẢN BÀN GIAO THÀNH PHẨM DỰ ÁN (CLIENT HANDOVER)
-**Dự án:** EduMaster_App
+**Dự án:** MotoCare_Upgrade
 **Phiên bản bàn giao:** v1.0.0 (Release Candidate Production-Ready)
 **Đại diện bàn giao:** Đội ngũ AI Multi-Agents & Tech Lead
 

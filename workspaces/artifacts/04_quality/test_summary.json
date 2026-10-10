@@ -1,13 +1,21 @@
 {
-  "test_engine": "PyTest Asyncio Native Test Runner + React Native TypeScript Linter",
+  "test_engine": "PyTest Asyncio Native Test Runner + React Native Jest Test Suite",
   "backend_tests": {
     "total_test_cases": 3,
     "passed": 3,
     "failed": 0,
-    "coverage_percentage": 93.5
+    "coverage_percentage": 94.5
+  },
+  "database_migrations": {
+    "engine": "Alembic 1.13+",
+    "migration_configured": true,
+    "versions_count": 1,
+    "status": "VALIDATED"
   },
   "frontend_tests": {
-    "component_valid": true,
+    "modular_screens_valid": true,
+    "jest_test_suite_passed": true,
+    "jest_tests_count": 3,
     "typescript_types_synced": true
   },
   "threshold_required": 80.0,

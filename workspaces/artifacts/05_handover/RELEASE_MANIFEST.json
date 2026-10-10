@@ -1,7 +1,7 @@
 {
-  "project_name": "EduMaster_App",
+  "project_name": "MotoCare_Upgrade",
   "version": "1.0.0",
-  "release_date": "2026-10-10T21:28:43.272333",
+  "release_date": "2026-10-10T22:07:08.307023",
   "target_tech_stack": {
     "backend_framework": "Python (FastAPI v0.110+)",
     "backend_orm": "SQLAlchemy 2.0 (Async) + Alembic",
@@ -42,8 +42,6 @@
     "client_handover_package",
     "uat_checklist",
     "user_manual",
-    "project_readme",
-    "release_zip_package",
-    "release_manifest"
+    "project_readme"
   ]
 }
