@@ -1,5 +1,5 @@
 # HƯỚNG DẪN SỬ DỤNG CHO NGƯỜI DÙNG CUỐI (USER MANUAL)
-**Dự án:** Test_Assessment
+**Dự án:** HealthClinicApp
 
 ## 1. KHỞI ĐỘNG HỆ THỐNG
 1. Clone hoặc giải nén thư mục mã nguồn.

@@ -1,26 +1,84 @@
-# PRODUCT REQUIREMENTS DOCUMENT (PRD)
-**Dự án:** Test_Assessment
-**Ngày tạo:** 2026-10-09
-**Người phê duyệt yêu cầu:** Tech Lead / Product Owner
+# PRODUCT REQUIREMENTS DOCUMENT (PRD) - v1.0.0
+**Dự án:** HealthClinicApp
+**Tác giả:** Business Analyst Agent & Tech Lead
+**Ngày ban hành:** 2026-10-10
+**Trạng thái:** DRAFT HOÀN CHỈNH (Chờ phê duyệt tại Gate 1)
 
-## 1. TỔNG QUAN & MỤC TIÊU
-Chúng tôi muốn xây dựng ứng dụng di động cho phép khách hàng đặt lịch hẹn bảo dưỡng xe máy, nhận thông báo khi xe sửa xong, xem bảng giá phụ tùng minh bạch và thanh toán online hoặc tại quầy. Hệ thống cần có trang quản trị cho nhân viên tiếp nhận xe và quản lý kho linh kiện.
+---
 
-## 2. PHẠM VI (SCOPE)
-- **In-Scope:** Các tính năng cốt lõi được mô tả trong yêu cầu thô đã được chuẩn hóa.
-- **Out-of-Scope:** Mở rộng bên ngoài chưa được khách hàng xác nhận.
+## 1. TỔNG QUAN & MỤC TIÊU ĐỊNH LƯỢNG (SMART GOALS)
+- **Tầm nhìn sản phẩm:** Hệ thống số hóa toàn diện quy trình cung ứng và đặt hàng Dịch vụ Khám & Gói Chăm sóc Y tế.
+- **Mục tiêu SMART:**
+  - Giảm 70% thời gian xử lý đơn hàng và phục vụ khách hàng mua Dịch vụ Khám & Gói Chăm sóc Y tế.
+  - Minh bạch 100% bảng giá và trạng thái xử lý đơn hàng theo thời gian thực.
+  - Tuân thủ triệt để quy tắc vận hành cốt lõi: Mỗi bác sĩ tiếp nhận tối đa 4 bệnh nhân mỗi khung giờ.
 
-## 3. USER STORIES & ACCEPTANCE CRITERIA (GHERKIN)
-### US-01: Khởi tạo và Quản trị
-- **Là một:** Người dùng hệ thống
-- **Tôi muốn:** Đăng nhập an toàn và truy cập các tính năng chính
-- **Để:** Sử dụng dịch vụ nhanh chóng và bảo mật
+---
 
+## 2. MA TRẬN TÍNH NĂNG CHỨC NĂNG (FUNCTIONAL REQUIREMENTS)
+
+| Mã Tính Năng | Tên Tính Năng | Mô Tả Tóm Tắt | Độ Ưu Tiên | Sub-Team Phụ Trách |
+|---|---|---|---|---|
+| **FR-01** | Xác thực & Phân quyền RBAC | Hỗ trợ đăng ký, đăng nhập JWT, phân quyền Customer, Staff, Admin | P0 (Must Have) | Backend & Mobile |
+| **FR-02** | Quản lý Đơn hàng & Lịch hẹn Dịch vụ Khám & Gói Chăm sóc Y tế | Tiếp nhận và kiểm soát dung lượng theo quy tắc: Mỗi bác sĩ tiếp nhận tối đa 4 bệnh nhân mỗi khung giờ | P0 (Must Have) | Backend & Mobile |
+| **FR-03** | Quản lý Danh mục & Bảng giá | Tra cứu, cập nhật tồn kho và giá bán của Dịch vụ Khám & Gói Chăm sóc Y tế | P0 (Must Have) | Backend & Mobile |
+| **FR-04** | Hóa đơn & Thanh toán QR | Tự động tính tổng tiền dịch vụ và sinh mã QR động thanh toán chuyển khoản | P0 (Must Have) | Backend |
+
+---
+
+## 3. DANH MỤC QUY TẮC NGHIỆP VỤ (BUSINESS RULES)
+
+| Mã Quy Tắc | Tên Quy Tắc | Nội Dung Ràng Buộc | Tầng Xử Lý |
+|---|---|---|---|
+| **BR-01** | Ràng buộc giới hạn công suất | Mỗi bác sĩ tiếp nhận tối đa 4 bệnh nhân mỗi khung giờ | Service |
+| **BR-02** | Thời hạn hiệu lực Access Token | JWT Access Token có thời hạn tối đa 15 phút, ký thuật toán HS256 | Core Security |
+
+---
+
+## 4. DANH SÁCH USER STORIES (VỚI TIÊU CHÍ GHERKIN)
+### US-01: Đăng ký & Đăng nhập Người Dùng (MUST_HAVE - 3 pts)
+- **As a:** Khách hàng
+- **I want to:** Đăng ký và đăng nhập nhanh bằng số điện thoại và mật khẩu
+- **So that:** Tôi có thể theo dõi lịch sử và trạng thái đơn hàng của mình
+- **Acceptance Criteria (Gherkin):**
 ```gherkin
-Scenario: Đăng nhập thành công
-  Given người dùng đã có tài khoản hợp lệ
-  When gửi thông tin xác thực đến hệ thống
-  Then hệ thống trả về mã token JWT và thông tin tài khoản
+Scenario: Đăng ký tài khoản mới thành công
+  Given số điện thoại '0912345678' chưa từng đăng ký
+  When người dùng nhập họ tên và mật khẩu hợp lệ
+  Then hệ thống tạo tài khoản mới và trả về HTTP 201 kèm Access Token JWT
+
+Scenario: Đăng ký trùng số điện thoại
+  Given số điện thoại '0912345678' đã tồn tại trong DB
+  When người dùng cố gắng đăng ký lại
+  Then hệ thống từ chối với HTTP 409 Conflict và thông báo lỗi rõ ràng
 ```
 
-[Discovery Sub-Team] Đã xử lý prompt thành công.
+### US-02: Đặt hàng / Đặt lịch Dịch vụ Khám & Gói Chăm sóc Y tế (MUST_HAVE - 5 pts)
+- **As a:** Khách hàng
+- **I want to:** Chọn dịch vụ Dịch vụ Khám & Gói Chăm sóc Y tế và chọn thời gian thực hiện
+- **So that:** Đơn hàng của tôi được chuẩn bị chu đáo và không bị chờ đợi
+- **Acceptance Criteria (Gherkin):**
+```gherkin
+Scenario: Đặt dịch vụ vào khung giờ còn trống
+  Given khung giờ được chọn còn slot trống hợp lệ
+  When người dùng bấm xác nhận đặt đơn
+  Then hệ thống tạo đơn với trạng thái 'CONFIRMED' và trừ 1 slot còn trống
+
+Scenario: Từ chối khi vượt công suất (Mỗi bác sĩ tiếp nhận tối đa 4 bệnh nhân mỗi khung giờ)
+  Given khung giờ đã đạt ngưỡng giới hạn tối đa
+  When người dùng cố gắng đặt thêm
+  Then hệ thống từ chối với HTTP 400 Bad Request và thông báo 'Khung giờ đã đầy chỗ'
+```
+
+### US-03: Tra cứu Bảng Giá Dịch vụ Khám & Gói Chăm sóc Y tế (MUST_HAVE - 3 pts)
+- **As a:** Khách hàng và Nhân viên
+- **I want to:** Xem danh mục mặt hàng niêm yết minh bạch kèm hình ảnh và đơn giá
+- **So that:** Tôi nắm rõ chi phí chính xác trước khi ra quyết định mua hàng
+- **Acceptance Criteria (Gherkin):**
+```gherkin
+Scenario: Tra cứu danh mục sản phẩm công khai
+  Given hệ thống có danh mục sản phẩm đang hoạt động
+  When người dùng gửi yêu cầu GET /api/v1/catalog
+  Then hệ thống trả về danh sách sản phẩm HTTP 200 kèm đơn giá niêm yết
+```
+

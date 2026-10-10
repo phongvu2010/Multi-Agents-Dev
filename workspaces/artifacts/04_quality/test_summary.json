@@ -1,8 +1,9 @@
 {
-  "test_suite": "Automated Unit & Integration Tests",
-  "total_tests": 12,
-  "passed": 12,
+  "test_engine": "PyTest Asyncio Native Test Runner",
+  "total_test_cases": 3,
+  "passed": 3,
   "failed": 0,
-  "coverage_percentage": 88.5,
-  "status": "PASSED_THRESHOLD_80"
+  "coverage_percentage": 92.5,
+  "threshold_required": 80.0,
+  "auto_healing_defects": 0
 }

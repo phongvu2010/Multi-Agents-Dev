@@ -1,1 +1,21 @@
-{"name": "mobile-app", "version": "1.0.0", "private": true}
+{
+  "name": "healthclinicapp-mobile",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios"
+  },
+  "dependencies": {
+    "react": "18.2.0",
+    "react-native": "0.73.4",
+    "zustand": "^4.5.1",
+    "@tanstack/react-query": "^5.24.1",
+    "axios": "^1.6.7"
+  },
+  "devDependencies": {
+    "typescript": "^5.1.3",
+    "@types/react": "~18.2.45"
+  }
+}

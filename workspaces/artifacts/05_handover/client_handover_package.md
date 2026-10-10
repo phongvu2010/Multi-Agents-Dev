@@ -1,5 +1,5 @@
 # BIÊN BẢN BÀN GIAO THÀNH PHẨM DỰ ÁN (CLIENT HANDOVER)
-**Dự án:** Test_Assessment
+**Dự án:** HealthClinicApp
 **Phiên bản bàn giao:** v1.0.0 (Release Candidate Production-Ready)
 **Đại diện bàn giao:** Đội ngũ AI Multi-Agents & Tech Lead
 

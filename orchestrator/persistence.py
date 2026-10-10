@@ -24,7 +24,7 @@ class StatePersistence:
         path = self._get_checkpoint_path(state.project_name)
         data = state.model_dump(mode="json")
         path.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")
-        console.print(f"  [dim]💾 Đã lưu checkpoint tại Phase [{state.current_phase.value}]: {path.name}[/dim]")
+        console.print(f"  [dim]💾 Đã lưu checkpoint tại Phase ({state.current_phase.value}): {path.name}[/dim]")
         return path
 
     def load_checkpoint(self, project_name: str) -> Optional[SDLCState]:

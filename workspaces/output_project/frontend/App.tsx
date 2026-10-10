@@ -1,44 +1,20 @@
 import React from 'react';
-import { StyleSheet, Text, View, SafeAreaView } from 'react-native';
+import { SafeAreaView, Text, View, StyleSheet } from 'react-native';
 
 export default function App() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.card}>
-        <Text style={styles.title}>Multi-Agents Mobile App</Text>
-        <Text style={styles.subtitle}>Sản phẩm sinh tự động bởi AI Multi-Agent System</Text>
-        <Text style={styles.status}>Backend Status: Connected (FastAPI)</Text>
+        <Text style={styles.title}>HealthClinicApp</Text>
+        <Text style={styles.subtitle}>Phát triển bởi Google Antigravity SDK Multi-Agents</Text>
       </View>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#0f172a',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  card: {
-    padding: 24,
-    borderRadius: 12,
-    backgroundColor: '#1e293b',
-    alignItems: 'center',
-  },
-  title: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: '#38bdf8',
-  },
-  subtitle: {
-    fontSize: 14,
-    color: '#94a3b8',
-    marginTop: 8,
-  },
-  status: {
-    fontSize: 12,
-    color: '#4ade80',
-    marginTop: 16,
-  },
+  container: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#F8FAFC' },
+  card: { padding: 24, borderRadius: 16, backgroundColor: '#FFFFFF', elevation: 4 },
+  title: { fontSize: 24, fontWeight: 'bold', color: '#1E293B', marginBottom: 8 },
+  subtitle: { fontSize: 14, color: '#64748B' }
 });
