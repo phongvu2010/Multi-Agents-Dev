@@ -37,7 +37,7 @@ Khi nhận yêu cầu phần mềm từ người dùng hoặc khách hàng, hệ
    - **Cơ chế kiểm thử ba lớp nâng cao (Triple Verification & Quality Metrics):** 
      - **Backend:** Chạy thực tế `pytest` qua subprocess tích hợp **Code Coverage tự động (`pytest-cov`)**, bắt buộc đạt tối thiểu **>= 80% coverage**.
      - **Database:** Thẩm định tính toàn vẹn của Alembic Migrations và **kiểm soát Schema Drift bằng `alembic check` (Zero Drift Policy)**.
-     - **Frontend (Web/Mobile):** Kiểm tra cấu trúc đa màn hình / components, TypeScript AST & **thực thi bộ Jest Test Suite qua Node subprocess (`run_tests.cjs`)**.
+     - **Frontend (Web/Mobile):** Kiểm tra cấu trúc đa màn hình / components, TypeScript AST, **Jest Unit Test Suite (`run_tests.cjs`)**, và **Kiểm thử End-to-End User Journeys qua Subprocess (`run_e2e_tests.cjs`)**.
      - **Security:** Quét tĩnh Secret Leaks & kiểm toán OWASP API Security Top 10.
    - ⟳ **Auto-Healing Loop:** Nếu phát hiện lỗi (Defect Ticket), tự động trích xuất traceback, áp bản vá trực tiếp vào mã nguồn tối đa 3 lần.
    - 🚦 **Chốt chặn:** Dừng lại tại **Gate 3 (Production Deploy Sign-off)** tại `review_gate_3_deploy.md`.
@@ -108,8 +108,14 @@ python -m orchestrator.agent_factory --subteam discovery_team --prompt "Phân t�
 # Xem toàn bộ lệnh:
 make help
 
-# Chạy test toàn diện Backend (kèm đo độ phủ pytest-cov), Alembic check, và Frontend:
+# Chạy chu trình SDLC (hỗ trợ chỉ định nền tảng PLATFORM=web hoặc PLATFORM=mobile):
+make dev PROJECT="Ten_Du_An" PLATFORM="web"
+
+# Chạy test toàn diện Backend (kèm đo độ phủ pytest-cov), Alembic check, và Frontend (Unit + E2E):
 make test-all
+
+# Chạy riêng bộ kiểm thử Frontend E2E:
+make test-frontend-e2e
 
 # Thẩm định riêng Schema Drift Database:
 make check-db

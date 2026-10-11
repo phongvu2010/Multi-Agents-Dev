@@ -25,15 +25,18 @@ async def run_architecture_phase(
     
     agent = factory.create_architecture_team(state.tech_lead_profile, response_schema=ArchitectureResult)
 
+    target_platform = getattr(state, "platform", "auto")
+    platform_hint = f"\nNền tảng Frontend đã chốt: {target_platform.upper()} ({'React Vite / Next.js Web' if target_platform == 'web' else 'React Native Mobile'}). Hãy cấu hình trường frontend_mobile tương ứng." if target_platform in ("web", "mobile") else ""
+
     prompt = f"""
 Hãy đóng vai Sub-Team 2: System Architect, Security Architect và Technical PM.
-Dự án: {state.project_name}
+Dự án: {state.project_name}{platform_hint}
 Yêu cầu thô & Ngữ cảnh:
 {state.raw_requirements}
 {"PHẢN HỒI REVISION TỪ TECH LEAD: " + revision_feedback if revision_feedback else ""}
 
 Nhiệm vụ:
-1. Thiết kế kiến trúc phân tầng Clean Architecture, tuân thủ Tech Lead Profile (Python/FastAPI, React Native, PostgreSQL).
+1. Thiết kế kiến trúc phân tầng Clean Architecture, tuân thủ Tech Lead Profile (Python/FastAPI, React Native / Next.js, PostgreSQL).
 2. Viết tài liệu ADRs, định nghĩa các endpoints OpenAPI 3.0.3, bảng DB và quan hệ ERD.
 3. Phân tích mô hình đe dọa STRIDE và ma trận phòng vệ.
 4. Phân rã backlog thành danh sách Tasks có depends_on để đưa vào DAG Execution Engine.

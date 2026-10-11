@@ -72,16 +72,18 @@ Tất cả các thao tác thường ngày đã được chuẩn hóa qua `Makefi
 | Lệnh | Ý Nghĩa & Mục Đích |
 | :--- | :--- |
 | `make help` | Hiển thị menu hướng dẫn tất cả các lệnh khả dụng |
-| `make dev PROJECT="Tên" FILE="brief.md"` | Khởi chạy toàn bộ chu trình SDLC từ yêu cầu thô (có dừng HITL) |
-| `make dev-quick PROJECT="Tên" FILE="brief.md"` | Chạy tự động không dừng (Bypass HITL - Dành cho kiểm thử CI/CD) |
+| `make dev [PROJECT=... FILE=... PLATFORM=web|mobile]` | Khởi chạy chu trình SDLC từ yêu cầu thô (có dừng HITL, hỗ trợ chỉ định nền tảng) |
+| `make dev-quick [PROJECT=... PLATFORM=web|mobile]` | Chạy tự động không dừng (Bypass HITL - Dành cho kiểm thử CI/CD) |
 | `make resume PROJECT="Tên"` | Khôi phục chu trình SDLC từ Checkpoint gián đoạn gần nhất |
 | `make sync PROJECT="Tên"` | **Đồng bộ hóa mã nguồn thực tế ngược vào Checkpoint & State Machine** |
-| `make status PROJECT="Tên"` | Kiểm tra đối chiếu trạng thái Gate, PyTest (Coverage), Alembic Drift (Read-only) |
-| `make test-all` | Thực thi kiểm thử đồng thời Backend (PyTest Coverage), Alembic Drift và Frontend |
+| `make status PROJECT="Tên"` | Kiểm tra đối chiếu trạng thái Gate, PyTest (Coverage), Alembic Drift, Frontend (Unit+E2E) |
+| `make test-all` | Thực thi kiểm thử toàn diện Backend (PyTest Coverage), Alembic Drift và Frontend (Unit + E2E) |
 | `make test-backend` | Chạy bộ kiểm thử PyTest Backend FastAPI kèm đo độ phủ Code Coverage |
 | `make cov-html` | Xuất báo cáo trực quan Code Coverage dạng HTML (`htmlcov/index.html`) |
 | `make check-db` | **Thẩm định Schema Drift Database (Zero Drift Policy) qua `alembic check`** |
-| `make test-frontend` | Chạy bộ kiểm thử Frontend qua Node runner |
+| `make test-frontend` | Chạy toàn bộ kiểm thử Frontend qua Node runner (cả Unit Tests và E2E Journeys) |
+| `make test-frontend-unit` | Chạy riêng bộ kiểm thử Unit Tests Frontend (`run_tests.cjs`) |
+| `make test-frontend-e2e` | **Chạy bộ kiểm thử Frontend End-to-End thực tế (`run_e2e_tests.cjs`)** |
 | `make run-backend` | Khởi chạy FastAPI Uvicorn Server tại `http://localhost:8000` |
 | `make run-frontend` | Khởi chạy Frontend Dev Server (Expo Mobile hoặc Vite Web) |
 | `make clean` | Dọn dẹp cache `__pycache__`, `.pytest_cache`, `.pyc` |
@@ -93,9 +95,9 @@ Tất cả các thao tác thường ngày đã được chuẩn hóa qua `Makefi
 
 ### 📌 Luồng 1: Khởi tạo dự án mới từ Client Brief
 1. Khách hàng hoặc PO chuẩn bị file yêu cầu (ví dụ: `workspaces/sample_client_brief.md`).
-2. Khởi chạy dự án:
+2. Khởi chạy dự án (có thể chỉ định rõ nền tảng `PLATFORM="web"` hoặc `PLATFORM="mobile"`):
    ```bash
-   make dev PROJECT="EduMaster_App" FILE="workspaces/sample_client_brief.md"
+   make dev PROJECT="EduMaster_App" FILE="workspaces/sample_client_brief.md" PLATFORM="web"
    ```
 3. Khi đến từng Gate, kiểm tra tài liệu tương tác trên **Auxiliary Pane** (bên phải giao diện Antigravity 2.0):
    - **Gate 1:** Mở `workspaces/artifacts/review_gate_1_prd.md`

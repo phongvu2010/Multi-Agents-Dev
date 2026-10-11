@@ -59,3 +59,6 @@ class SDLCState(BaseModel):
     # Trạng thái hoàn tất
     is_success: bool = False
     notes: Optional[str] = None
+
+    # Nền tảng Frontend mục tiêu ('auto', 'web', 'mobile')
+    platform: str = "auto"

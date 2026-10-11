@@ -24,9 +24,12 @@ async def run_discovery_phase(
     
     agent = factory.create_discovery_team(state.tech_lead_profile, response_schema=DiscoveryResult)
 
+    target_platform = getattr(state, "platform", "auto")
+    platform_hint = f"\nNền tảng mục tiêu yêu cầu: {target_platform.upper()} ({'Web Portal: React Vite / Next.js' if target_platform == 'web' else 'Mobile App: React Native'}). Hãy thiết kế luồng UI/UX và User Stories chuẩn xác cho nền tảng này." if target_platform in ("web", "mobile") else ""
+
     prompt_discovery = f"""
 Hãy đóng vai trò trọn vẹn Sub-Team 1 (Client Liaison, BA/PO, UI/UX Concept Agent).
-Dự án: {state.project_name}
+Dự án: {state.project_name}{platform_hint}
 Yêu cầu thô từ khách hàng:
 ---
 {state.raw_requirements}

@@ -56,11 +56,19 @@ class SDLCOrchestrator:
         self,
         project_name: str,
         raw_requirements: str,
-        resume: bool = False
+        resume: bool = False,
+        platform: str = "auto"
     ) -> SDLCState:
+        platform_label = {
+            "web": "Web Portal (React Vite / Next.js)",
+            "mobile": "Mobile App (React Native)",
+            "auto": "Tự động phát hiện qua Brief (Auto-detect)"
+        }.get(platform.lower(), platform.upper())
+
         console.print(Panel(
             f"[bold green]KHỞI ĐỘNG HỆ THỐNG AI MULTI-AGENTS SDLC[/bold green]\n"
             f"[bold]Dự án:[/bold] {project_name}\n"
+            f"[bold]Nền tảng Frontend:[/bold] {platform_label}\n"
             f"[bold]Tech Lead Stack:[/bold] Python/FastAPI + React Native / Node.js\n"
             f"[bold]Lộ trình:[/bold] 4 Giai đoạn phát triển hoàn chỉnh (DAG Engine, Auto-Healing, Release Bundler)\n"
             f"[bold]Chế độ:[/bold] {'Khôi phục phiên làm việc (Resume)' if resume else 'Khởi tạo mới'}",
@@ -73,18 +81,22 @@ class SDLCOrchestrator:
             loaded_state = self.persistence.load_checkpoint(project_name)
             if loaded_state:
                 state = loaded_state
+                if platform != "auto":
+                    state.platform = platform
             else:
                 console.print(f"[bold yellow]Không tìm thấy checkpoint cho '{project_name}'. Khởi tạo mới.[/bold yellow]")
                 state = SDLCState(
                     project_name=project_name,
                     raw_requirements=raw_requirements,
-                    tech_lead_profile=self.tech_profile
+                    tech_lead_profile=self.tech_profile,
+                    platform=platform
                 )
         else:
             state = SDLCState(
                 project_name=project_name,
                 raw_requirements=raw_requirements,
-                tech_lead_profile=self.tech_profile
+                tech_lead_profile=self.tech_profile,
+                platform=platform
             )
 
         # =========================================================================
@@ -260,6 +272,12 @@ def main():
     parser.add_argument("--requirements", help="Chuỗi văn bản yêu cầu thô truyền trực tiếp qua dòng lệnh")
     parser.add_argument("--resume", action="store_true", help="Khôi phục phiên làm việc từ Checkpoint gần nhất")
     parser.add_argument("--no-hitl", action="store_true", help="Tự động bypass các cổng HITL (Dành cho CI/CD test)")
+    parser.add_argument(
+        "--platform",
+        choices=["auto", "web", "mobile"],
+        default="auto",
+        help="Chỉ định nền tảng Frontend mục tiêu (auto: tự nhận diện qua Brief, web: React Vite/Next.js Web Portal, mobile: React Native Mobile App)"
+    )
     args = parser.parse_args()
 
     orchestrator = SDLCOrchestrator(
@@ -288,7 +306,8 @@ def main():
     asyncio.run(orchestrator.execute_lifecycle(
         project_name=args.project,
         raw_requirements=raw_req,
-        resume=args.resume
+        resume=args.resume,
+        platform=args.platform
     ))
 
 

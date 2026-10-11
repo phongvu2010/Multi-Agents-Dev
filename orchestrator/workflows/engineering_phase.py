@@ -69,8 +69,13 @@ async def run_engineering_phase(
     else:
         waves = []
 
-    # 3. Phân tích ngữ cảnh domain thích ứng
-    domain_info = DomainAnalyzer.analyze(state.raw_requirements, project_name=state.project_name)
+    # 3. Phân tích ngữ cảnh domain thích ứng kết hợp cờ platform chỉ định
+    target_platform = getattr(state, "platform", "auto")
+    domain_info = DomainAnalyzer.analyze(
+        state.raw_requirements,
+        project_name=state.project_name,
+        platform=target_platform
+    )
 
     # =========================================================================
     # WAVE 1 & 2: CORE CONFIG, DATABASE, REPOSITORIES & SERVICES (HYBRID SYNTHESIS)
@@ -94,10 +99,11 @@ async def run_engineering_phase(
     # =========================================================================
     # WAVE 3: ROUTERS & FRONTEND (REACT NATIVE MOBILE HOẶC REACT VITE/NEXT.JS WEB)
     # =========================================================================
-    fe_target = domain_info.get("frontend_target", "mobile")
+    target_override = target_platform if target_platform in ("web", "mobile") else None
+    fe_target = target_override or domain_info.get("frontend_target", "mobile")
     fe_label = "Web Portal (React Vite / Next.js TypeScript)" if fe_target == "web" else "Mobile App (React Native TypeScript)"
     console.print(f"  [bold cyan]► Wave 3: Thiết lập Routers API & Giao diện {fe_label}...[/bold cyan]")
-    synthesizer.synthesize_frontend(domain_info)
+    synthesizer.synthesize_frontend(domain_info, target_override=target_override)
 
     # =========================================================================
     # WAVE 4: DEVOPS INFRASTRUCTURE (DOCKERFILE & DOCKER-COMPOSE)

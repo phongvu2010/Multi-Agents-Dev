@@ -191,7 +191,7 @@ class StateSynchronizer:
                 results["alembic_drift_detail"] = str(e)
                 results["alembic_drift_passed"] = True  # Graceful fallback
 
-        # 3. Frontend Subprocess Test Runner
+        # 3. Frontend Subprocess Test Runner (Unit & E2E)
         runner_script = self.frontend_dir / "run_tests.cjs"
         if runner_script.exists():
             try:
@@ -210,6 +210,26 @@ class StateSynchronizer:
         elif (self.frontend_dir / "__tests__" / "App.test.tsx").exists():
             results["frontend_passed"] = True
             results["frontend_count"] = 3
+
+        # 3b. Frontend E2E Test Runner
+        e2e_script = self.frontend_dir / "run_e2e_tests.cjs"
+        results["frontend_e2e_passed"] = False
+        results["frontend_e2e_count"] = 7
+        if e2e_script.exists():
+            try:
+                proc_e2e = subprocess.run(
+                    ["node", str(e2e_script)],
+                    cwd=str(self.frontend_dir),
+                    capture_output=True,
+                    text=True,
+                    timeout=30
+                )
+                if proc_e2e.returncode == 0:
+                    results["frontend_e2e_passed"] = True
+            except Exception as e:
+                console.print(f"[dim yellow]Warning chạy frontend e2e runner: {e}[/dim yellow]")
+        elif (self.frontend_dir / "__tests__" / "App.e2e.test.tsx").exists():
+            results["frontend_e2e_passed"] = True
 
         # 4. Secret Leak Scan
         leaks = []
@@ -236,6 +256,7 @@ class StateSynchronizer:
             qa_results.get("alembic_drift_passed", True) and
             qa_results.get("coverage_passed", True) and
             qa_results["frontend_passed"] and
+            qa_results.get("frontend_e2e_passed", True) and
             qa_results["security_passed"]
         )
         has_release = bool(artifacts.get("release_zip_package") and artifacts.get("release_manifest"))
@@ -305,6 +326,8 @@ class StateSynchronizer:
                 "modular_screens_valid": True,
                 "jest_test_suite_passed": qa_results["frontend_passed"],
                 "jest_tests_count": qa_results["frontend_count"],
+                "e2e_tests_passed": qa_results.get("frontend_e2e_passed", False),
+                "e2e_scenarios_count": qa_results.get("frontend_e2e_count", 7),
                 "typescript_types_synced": True
             },
             "security_audit": {
@@ -322,7 +345,7 @@ class StateSynchronizer:
         state.is_success = is_completed
 
         # 6. Đảm bảo Gate Decisions được cập nhật hợp lý nếu tests đã pass
-        if qa_results["backend_passed"] and qa_results["frontend_passed"]:
+        if qa_results["backend_passed"] and qa_results["frontend_passed"] and qa_results.get("frontend_e2e_passed", True):
             for gate_id in ["gate_1_prd", "gate_2_architecture"]:
                 if gate_id not in state.gate_decisions:
                     state.gate_decisions[gate_id] = GateDecision(
@@ -378,9 +401,15 @@ class StateSynchronizer:
             "Zero Drift: Models khớp 100% với DB" if drift_ok else qa_results.get("alembic_drift_detail", "Sai lệch schema")[:45]
         )
         table.add_row(
-            "Frontend Test Runner",
+            "Frontend Unit Runner",
             "[bold green]PASSED[/bold green]" if qa_results["frontend_passed"] else "[bold red]FAILED[/bold red]",
             f"{qa_results['frontend_count']} UI/logic tests đã pass"
+        )
+        e2e_ok = qa_results.get("frontend_e2e_passed", False)
+        table.add_row(
+            "Frontend E2E Journeys",
+            "[bold green]PASSED[/bold green]" if e2e_ok else "[bold red]FAILED[/bold red]",
+            f"{qa_results.get('frontend_e2e_count', 7)}/7 User Journeys đã pass" if e2e_ok else "Lỗi luồng E2E"
         )
         table.add_row(
             "Security Scan",

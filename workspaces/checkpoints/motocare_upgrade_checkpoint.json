@@ -88,5 +88,6 @@
   "current_iteration": 1,
   "max_iterations": 3,
   "is_success": true,
-  "notes": null
+  "notes": null,
+  "platform": "auto"
 }
