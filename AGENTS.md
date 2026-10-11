@@ -91,3 +91,22 @@ Các Subagents đã được cấu hình native tại `.agents/subteams/`. Bạn
 - **Sub-Team 4:** `@qa_team: Chạy PyTest, kiểm tra Jest frontend và scan bảo mật`
 - **Sub-Team 5:** `@release_team: Đóng gói release zip và lập UAT Checklist`
 - Kiểm tra các Artifacts trực quan trên **Auxiliary Pane** (bên phải giao diện Antigravity 2.0).
+
+### Cách 3: Sử dụng Makefile & State Synchronizer (Khuyên dùng cho Dev)
+```bash
+# Xem toàn bộ lệnh:
+make help
+
+# Chạy test toàn diện Backend & Frontend:
+make test-all
+
+# Đồng bộ mã nguồn đã chỉnh sửa ngược vào SDLC Checkpoint:
+make sync PROJECT="Ten_Du_An"
+
+# Khởi chạy server:
+make run-backend    # FastAPI :8000
+make run-frontend   # Expo Mobile / Vite Web
+```
+
+> Chi tiết cẩm nang vận hành dành cho đội ngũ: Xem tại [TEAM_PLAYBOOK.md](./TEAM_PLAYBOOK.md).
+

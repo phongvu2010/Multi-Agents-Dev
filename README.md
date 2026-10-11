@@ -69,6 +69,8 @@ Tại mỗi chốt chặn, hệ thống tự động sinh tài liệu Markdown t
 Multi-Agents-Dev/
 ├── README.md                          # Tài liệu hướng dẫn hệ thống
 ├── AGENTS.md                          # Quy chuẩn nạp tự động cho Antigravity 2.0 IDE
+├── TEAM_PLAYBOOK.md                   # Cẩm nang hướng dẫn thực chiến cho Developer Team
+├── Makefile                           # Bộ tự động hóa lệnh chạy và kiểm thử cho Dev
 ├── requirements.txt                   # Thư viện phụ thuộc (google-genai, sqlalchemy, rich...)
 ├── .env.example                       # Biến môi trường mẫu
 ├── config/
@@ -87,6 +89,7 @@ Multi-Agents-Dev/
 ├── orchestrator/                      # Mã nguồn Python điều phối SDLC
 │   ├── state.py                       # Quản lý trạng thái SDLC State Machine
 │   ├── hitl.py                        # HITL Manager & Interactive Review Generator
+│   ├── sync_state.py                  # Cầu nối đồng bộ mã nguồn & Checkpoint State
 │   ├── synthesis_engine.py            # Adaptive Code Synthesizer & Auto-Healing Patcher
 │   ├── agent_factory.py               # Khởi tạo Agents kết nối google.genai & Antigravity SDK
 │   ├── dag_engine.py                  # Động cơ DAG điều phối Wave execution
@@ -127,35 +130,56 @@ Multi-Agents-Dev/
    - **Dọn dẹp Skills Directory:** Chuẩn hóa thư mục kỹ năng `.agents/skills/`, loại bỏ các folder rác hoặc rỗng để tối ưu khả năng tự động khám phá kỹ năng.
    - **Khai thác Toàn diện MCP Servers:** Tích hợp `get_available_mcp_servers()` phát hiện và nạp tự động các MCP Tools (`gemini-api_gemini-api-docs`, `gemini-notebook-mcp`) vào system instructions của cả 5 Sub-Teams.
 
+
+5. **Giai đoạn 6: Bộ Tối Ưu Nền Tảng Cho Developer Team (Developer Tooling & Bridge Engine)**
+   - **Bộ Tự Động Hóa Makefile:** Cung cấp `make dev`, `make resume`, `make sync`, `make test-all`, `make run-backend`, `make run-frontend` giúp dev thao tác một chạm.
+   - **State Synchronizer (`sync_state.py`):** Cầu nối hoàn hảo giữa mã nguồn sửa đổi thủ công / Chat Canvas và SDLC Checkpoints. Tự động quét code, chạy test, xác định Phase và cập nhật checkpoint.
+   - **Developer Team Playbook ([TEAM_PLAYBOOK.md](./TEAM_PLAYBOOK.md)):** Cẩm nang onboarding và vận hành chi tiết cho các lập trình viên và Tech Lead khi cộng tác với 15 AI Agents.
+   - **Scaffolding Startup Script:** Bổ sung `setup_dev.sh` và `README.md` cho Frontend Web (Vite) và Mobile (Expo) giúp dev khởi chạy ngay lập tức.
+
 ---
 
 ## 🚀 Hướng Dẫn Vận Hành
 
-### 1. Cài đặt môi trường
+### 1. Khởi chạy nhanh với Makefile (Khuyên dùng)
 ```bash
-pip install -r requirements.txt
-cp .env.example .env
-# Thêm GEMINI_API_KEY vào file .env
+# Xem toàn bộ lệnh khả dụng
+make help
+
+# Chạy dự án mới từ Client Brief:
+make dev PROJECT="Ten_Du_An" FILE="workspaces/sample_client_brief.md"
+
+# Chạy kiểm thử toàn diện cả Backend & Frontend:
+make test-all
+
+# Đồng bộ mã nguồn đã chỉnh sửa vào Checkpoint:
+make sync PROJECT="Ten_Du_An"
+
+# Khởi chạy server:
+make run-backend    # FastAPI tại http://localhost:8000
+make run-frontend   # Expo Mobile hoặc Vite Web
 ```
 
-### 2. Các chế độ khởi chạy
+### 2. Khởi chạy qua Python Module
 
-- **Chạy với file yêu cầu thô từ khách hàng (Khuyên dùng):**
+- **Chạy với file yêu cầu thô từ khách hàng:**
   ```bash
-  python -m orchestrator.runner --project "Ten_Du_An" --input-file "workspaces/sample_client_brief.md"
-  ```
-
-- **Chạy truyền trực tiếp yêu cầu qua dòng lệnh:**
-  ```bash
-  python -m orchestrator.runner --project "EduMaster_App" --requirements "Làm app học trực tuyến..."
+  python3 -m orchestrator.runner --project "Ten_Du_An" --input-file "workspaces/sample_client_brief.md"
   ```
 
 - **Khôi phục phiên làm việc bị gián đoạn (Resume từ Checkpoint):**
   ```bash
-  python -m orchestrator.runner --project "EduMaster_App" --resume
+  python3 -m orchestrator.runner --project "Ten_Du_An" --resume
+  ```
+
+- **Đồng bộ trạng thái sau khi can thiệp code:**
+  ```bash
+  python3 -m orchestrator.sync_state --project "Ten_Du_An"
   ```
 
 - **Chạy tự động không dừng (Dành cho CI/CD test):**
   ```bash
-  python -m orchestrator.runner --project "EduMaster_App" --no-hitl
+  python3 -m orchestrator.runner --project "Ten_Du_An" --no-hitl
   ```
+
+> 📖 Xem chi tiết quy trình thực chiến tại [TEAM_PLAYBOOK.md](./TEAM_PLAYBOOK.md).

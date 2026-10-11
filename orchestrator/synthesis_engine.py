@@ -854,6 +854,9 @@ def downgrade() -> None:
   "name": "{domain_info['project_name'].lower()}-mobile",
   "version": "1.0.0",
   "private": true,
+  "engines": {{
+    "node": ">=18.0.0"
+  }},
   "scripts": {{
     "start": "expo start",
     "android": "expo start --android",
@@ -1379,6 +1382,69 @@ describe('React Native Mobile App Test Suite', () => {{
         # 14. run_tests.cjs (Jest-compatible Node Runner)
         self._write_node_test_runner()
 
+        # 15. setup_dev.sh (Developer Scaffolding Script)
+        (self.frontend_dir / "setup_dev.sh").write_text('''#!/usr/bin/env bash
+set -e
+echo "🚀 [Mobile] Cài đặt dependencies và khởi chạy Expo development server..."
+if ! command -v node &> /dev/null; then
+    echo "❌ Lỗi: Node.js chưa được cài đặt. Vui lòng cài đặt Node.js v18+."
+    exit 1
+fi
+npm install
+echo "✔ Cài đặt hoàn tất. Khởi chạy Expo..."
+npx expo start
+''', encoding="utf-8")
+        try:
+            (self.frontend_dir / "setup_dev.sh").chmod(0o755)
+        except Exception:
+            pass
+
+        # 16. README.md cho Frontend Mobile
+        (self.frontend_dir / "README.md").write_text(f'''# {domain_info['project_name']} — Mobile App (React Native TypeScript)
+
+Ứng dụng di động được xây dựng bằng **React Native**, **TypeScript**, kiến trúc đa màn hình theo chuẩn Tech Lead Profile.
+
+---
+
+## 🚀 Khởi Chạy Nhanh (Quick Start)
+
+### 1. Cài đặt dependencies & khởi động Expo:
+```bash
+bash setup_dev.sh
+# Hoặc:
+npm install
+npm start
+```
+
+### 2. Chạy trên Thiết bị & Giả lập:
+- **Android Emulator / Device:** `npm run android`
+- **iOS Simulator (macOS):** `npm run ios`
+
+### 3. Kiểm thử (Unit & Logic Tests):
+```bash
+# Chạy bộ test tương thích Node sandbox:
+node run_tests.cjs
+
+# Chạy qua Jest (khi đã cài node_modules):
+npm test
+```
+
+## 📂 Cấu Trúc Thư Mục
+```text
+frontend/
+├── App.tsx                      # Entrypoint tích hợp AppNavigator
+├── types.ts                     # TypeScript Interfaces
+├── setup_dev.sh                 # Scaffolding startup script
+├── run_tests.cjs                # Standalone Jest assertion runner
+├── src/
+│   ├── api/client.ts            # Axios REST API Client
+│   ├── store/appStore.ts        # Quản lý State tập trung
+│   ├── navigation/AppNavigator  # Điều hướng màn hình
+│   └── screens/                 # Auth, Catalog, Booking, Tracking Screens
+└── __tests__/App.test.tsx       # Jest test suite (3 Unit Tests)
+```
+''', encoding="utf-8")
+
     def _write_node_test_runner(self) -> None:
         """Tạo script kiểm thử Node.js độc lập tương thích hoàn toàn với Jest cho môi trường sandbox."""
         (self.frontend_dir / "run_tests.cjs").write_text('''/**
@@ -1476,6 +1542,9 @@ if (failedTests > 0) {
   "name": "{domain_info['project_name'].lower()}-web",
   "version": "1.0.0",
   "private": true,
+  "engines": {{
+    "node": ">=18.0.0"
+  }},
   "scripts": {{
     "dev": "vite",
     "build": "tsc && vite build",
@@ -2049,6 +2118,70 @@ describe('{domain_info['project_name']} Web Portal Test Suite', () => {{
 
         # 14. run_tests.cjs (Jest-compatible Node Runner)
         self._write_node_test_runner()
+
+        # 15. setup_dev.sh (Web Scaffolding Startup Script)
+        (self.frontend_dir / "setup_dev.sh").write_text('''#!/usr/bin/env bash
+set -e
+echo "🚀 [Web Portal] Cài đặt dependencies và khởi chạy Vite development server..."
+if ! command -v node &> /dev/null; then
+    echo "❌ Lỗi: Node.js chưa được cài đặt. Vui lòng cài đặt Node.js v18+."
+    exit 1
+fi
+npm install
+echo "✔ Cài đặt hoàn tất. Khởi chạy Vite Dev Server..."
+npm run dev
+''', encoding="utf-8")
+        try:
+            (self.frontend_dir / "setup_dev.sh").chmod(0o755)
+        except Exception:
+            pass
+
+        # 16. README.md cho Web Frontend
+        (self.frontend_dir / "README.md").write_text(f'''# {domain_info['project_name']} — Web Portal (React Vite TypeScript)
+
+Cổng thông tin web được xây dựng bằng **React Vite**, **TypeScript**, Clean Component Layout theo chuẩn Tech Lead Profile.
+
+---
+
+## 🚀 Khởi Chạy Nhanh (Quick Start)
+
+### 1. Cài đặt dependencies & khởi động Dev Server:
+```bash
+bash setup_dev.sh
+# Hoặc:
+npm install
+npm run dev
+```
+
+### 2. Xây dựng bản phân phối Production (Build):
+```bash
+npm run build
+```
+
+### 3. Kiểm thử (Unit & Logic Tests):
+```bash
+# Chạy bộ test tương thích Node sandbox:
+node run_tests.cjs
+
+# Chạy test qua npm:
+npm test
+```
+
+## 📂 Cấu Trúc Thư Mục
+```text
+frontend/
+├── index.html                   # HTML Entrypoint
+├── App.tsx                      # Root App component
+├── setup_dev.sh                 # Scaffolding startup script
+├── run_tests.cjs                # Standalone Jest assertion runner
+├── src/
+│   ├── types.ts                 # TypeScript Interfaces
+│   ├── api/client.ts            # Axios REST API Client
+│   ├── store/appStore.ts        # Quản lý State tập trung
+│   └── components/              # Navbar, CatalogView, BookingForm, OrderTracker
+└── __tests__/App.test.tsx       # Jest test suite (3 Unit Tests)
+```
+''', encoding="utf-8")
 
     def synthesize_frontend(self, domain_info: Dict[str, Any], target_override: Optional[str] = None) -> None:
         """Điều phối sinh mã nguồn Frontend: Tự động chọn Web (Next.js/React Vite) hoặc Mobile (React Native)."""

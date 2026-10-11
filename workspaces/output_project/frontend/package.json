@@ -2,6 +2,9 @@
   "name": "motocare_upgrade-mobile",
   "version": "1.0.0",
   "private": true,
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "scripts": {
     "start": "expo start",
     "android": "expo start --android",
