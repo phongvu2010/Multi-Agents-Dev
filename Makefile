@@ -7,7 +7,7 @@ PROJECT ?= MotoCare_Upgrade
 FILE ?= workspaces/sample_client_brief.md
 PLATFORM ?= auto
 
-.PHONY: help dev dev-quick resume sync status models subteams test-all test-backend test-frontend test-frontend-unit test-frontend-e2e check-db cov-html run-backend run-frontend docker-build docker-up docker-down docker-logs clean install
+.PHONY: help dev dev-quick resume sync status models subteams test-examples test-all test-backend test-frontend test-frontend-unit test-frontend-e2e check-db cov-html run-backend run-frontend docker-build docker-up docker-down docker-logs clean install
 
 help:
 	@echo ""
@@ -21,6 +21,7 @@ help:
 	@echo "  make status [PROJECT=...]            Kiểm tra trạng thái Gates & Tests (Read-only)"
 	@echo "  make models                          Hiển thị Ma Trận Phân Bổ Mô Hình AI & Chi Phí Token"
 	@echo "  make subteams                        Xem danh sách 5 Native Sub-Teams & Kỹ năng"
+	@echo "  make test-examples                   Chạy bộ kiểm thử của Dự án Mẫu Tham Khảo (Golden Reference)"
 	@echo "  make test-all                        Thực thi toàn bộ PyTest (Coverage) & Frontend (Unit+E2E)"
 	@echo "  make test-backend                    Chạy PyTest Backend kèm đo độ phủ (Coverage)"
 	@echo "  make cov-html                        Xuất báo cáo Code Coverage dạng HTML"
@@ -64,35 +65,72 @@ status:
 	$(PYTHON) -m orchestrator.sync_state --project "$(PROJECT)" --check-only
 
 test-backend:
-	PYTHONPATH=workspaces/output_project/backend $(PYTHON) -m pytest workspaces/output_project/backend/tests -v --cov=app --cov-report=term-missing
+	@if [ ! -d "workspaces/output_project/backend/tests" ]; then \
+		echo "⚠️  Chưa có mã nguồn Backend trong workspaces/output_project/backend."; \
+		echo "👉 Khởi chạy dự án mới bằng: make dev PROJECT=\"Tên_Dự_Án\" (hoặc test mẫu: make test-examples)"; \
+	else \
+		PYTHONPATH=workspaces/output_project/backend $(PYTHON) -m pytest workspaces/output_project/backend/tests -v --cov=app --cov-report=term-missing; \
+	fi
 
 cov-html:
-	PYTHONPATH=workspaces/output_project/backend $(PYTHON) -m pytest workspaces/output_project/backend/tests -v --cov=app --cov-report=html:workspaces/artifacts/04_quality/htmlcov
-	@echo "✔ Đã xuất báo cáo HTML coverage tại: workspaces/artifacts/04_quality/htmlcov/index.html"
+	@if [ ! -d "workspaces/output_project/backend/tests" ]; then \
+		echo "⚠️  Chưa có mã nguồn Backend để xuất báo cáo HTML coverage."; \
+	else \
+		PYTHONPATH=workspaces/output_project/backend $(PYTHON) -m pytest workspaces/output_project/backend/tests -v --cov=app --cov-report=html:workspaces/artifacts/04_quality/htmlcov; \
+		echo "✔ Đã xuất báo cáo HTML coverage tại: workspaces/artifacts/04_quality/htmlcov/index.html"; \
+	fi
 
 check-db:
-	cd workspaces/output_project/backend && $(PYTHON) -m alembic check
+	@if [ ! -f "workspaces/output_project/backend/alembic.ini" ]; then \
+		echo "⚠️  Chưa có cấu hình Alembic trong workspaces/output_project/backend."; \
+	else \
+		cd workspaces/output_project/backend && $(PYTHON) -m alembic check; \
+	fi
 
 test-frontend-unit:
-	$(NODE) workspaces/output_project/frontend/run_tests.cjs
+	@if [ ! -f "workspaces/output_project/frontend/run_tests.cjs" ]; then \
+		echo "⚠️  Chưa có mã nguồn Frontend Unit Tests trong workspaces/output_project/frontend."; \
+	else \
+		$(NODE) workspaces/output_project/frontend/run_tests.cjs; \
+	fi
 
 test-frontend-e2e:
-	$(NODE) workspaces/output_project/frontend/run_e2e_tests.cjs
+	@if [ ! -f "workspaces/output_project/frontend/run_e2e_tests.cjs" ]; then \
+		echo "⚠️  Chưa có kịch bản Frontend E2E trong workspaces/output_project/frontend."; \
+	else \
+		$(NODE) workspaces/output_project/frontend/run_e2e_tests.cjs; \
+	fi
 
 test-frontend: test-frontend-unit test-frontend-e2e
 
 test-all: test-backend check-db test-frontend
 
+test-examples:
+	@echo "▶ Đang chạy kiểm thử Dự án Mẫu Tham Khảo (examples/motocare_reference)..."
+	PYTHONPATH=examples/motocare_reference/output_project/backend $(PYTHON) -m pytest examples/motocare_reference/output_project/backend/tests -v --cov=app --cov-report=term-missing
+	cd examples/motocare_reference/output_project/backend && $(PYTHON) -m alembic check
+	$(NODE) examples/motocare_reference/output_project/frontend/run_tests.cjs
+	$(NODE) examples/motocare_reference/output_project/frontend/run_e2e_tests.cjs
+	@echo "✔ Toàn bộ test suite của dự án mẫu Golden Reference ĐÃ PASS 100%!"
+
 run-backend:
-	PYTHONPATH=workspaces/output_project/backend $(PYTHON) -m uvicorn app.main:app --reload --app-dir workspaces/output_project/backend --port 8000
+	@if [ ! -d "workspaces/output_project/backend/app" ]; then \
+		echo "⚠️  Chưa có mã nguồn Backend để khởi chạy."; \
+		echo "👉 Khởi chạy dự án mới bằng: make dev PROJECT=\"Tên_Dự_Án\""; \
+	else \
+		PYTHONPATH=workspaces/output_project/backend $(PYTHON) -m uvicorn app.main:app --reload --app-dir workspaces/output_project/backend --port 8000; \
+	fi
 
 run-frontend:
 	@if [ -f workspaces/output_project/frontend/setup_dev.sh ]; then \
 		bash workspaces/output_project/frontend/setup_dev.sh; \
 	elif [ -f workspaces/output_project/frontend/index.html ]; then \
 		cd workspaces/output_project/frontend && npm install && npm run dev; \
-	else \
+	elif [ -f workspaces/output_project/frontend/App.tsx ]; then \
 		cd workspaces/output_project/frontend && npm install && npx expo start; \
+	else \
+		echo "⚠️  Chưa có mã nguồn Frontend để khởi chạy."; \
+		echo "👉 Khởi chạy dự án mới bằng: make dev PROJECT=\"Tên_Dự_Án\""; \
 	fi
 
 docker-build:

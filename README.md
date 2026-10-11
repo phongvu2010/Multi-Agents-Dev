@@ -96,10 +96,13 @@ Multi-Agents-Dev/
 │   ├── auto_healing.py                # Điều phối vòng lặp tự động sửa lỗi
 │   ├── release_bundler.py             # Đóng gói zip, manifest & tài liệu
 │   └── runner.py                      # Điểm khởi chạy CLI
+├── examples/
+│   └── motocare_reference/            # Dự án Mẫu Tham Khảo Chuẩn (Golden Reference: Backend, Frontend, Docs, Checkpoint)
 └── workspaces/
-    ├── artifacts/                     # Kho lưu trữ PRD, Architecture, Review Docs, Handover
-    ├── output_project/                # Mã nguồn sản phẩm đích (backend, frontend, infra)
-    └── checkpoints/                   # Checkpoints phục vụ khôi phục phiên làm việc
+    ├── artifacts/                     # Runtime Artifacts sinh ra trong chu trình SDLC (PRD, OpenAPI, Gates)
+    ├── output_project/                # Runtime Workspace đích để AI sinh mã nguồn tự động
+    ├── checkpoints/                   # Checkpoints lưu trạng thái phục vụ lệnh resume
+    └── backups/                       # Tự động sao lưu dự án trước khi ghi đè dự án mới (Overwrite Protection)
 ```
 
 ---

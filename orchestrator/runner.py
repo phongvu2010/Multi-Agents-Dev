@@ -52,6 +52,38 @@ class SDLCOrchestrator:
                 return yaml.safe_load(f) or {}
         return {}
 
+    def _backup_existing_output_if_needed(self, new_project_name: str):
+        """Tự động sao lưu dự án cũ trong output_project trước khi bắt đầu dự án mới (Overwrite Protection)."""
+        backend_dir = self.output_project_dir / "backend"
+        frontend_dir = self.output_project_dir / "frontend"
+        if not (backend_dir.exists() or frontend_dir.exists()):
+            return
+
+        readme_path = self.output_project_dir / "README.md"
+        prev_name = "previous_project"
+        if readme_path.exists():
+            try:
+                first_line = readme_path.read_text(encoding="utf-8").splitlines()[0]
+                extracted = re.sub(r"[^a-zA-Z0-9_\-]", "", first_line.replace("#", "").strip())
+                if extracted and "WORKSPACE" not in extracted:
+                    prev_name = extracted
+            except Exception:
+                prev_name = "previous_project"
+
+        if prev_name.lower().replace("_", "") == new_project_name.lower().replace("_", ""):
+            return
+
+        from datetime import datetime
+        import shutil
+        ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+        backup_dir = self.base_dir / "workspaces" / "backups" / f"{prev_name}_{ts}"
+        backup_dir.parent.mkdir(parents=True, exist_ok=True)
+        try:
+            shutil.copytree(self.output_project_dir, backup_dir, dirs_exist_ok=True)
+            console.print(f"[bold yellow]📦 Đã tự động sao lưu dự án trước đó vào:[/bold yellow] [dim]{backup_dir}[/dim]")
+        except Exception as e:
+            console.print(f"[dim yellow]Warning sao lưu output_project: {e}[/dim yellow]")
+
     async def execute_lifecycle(
         self,
         project_name: str,
@@ -59,6 +91,8 @@ class SDLCOrchestrator:
         resume: bool = False,
         platform: str = "auto"
     ) -> SDLCState:
+        if not resume:
+            self._backup_existing_output_if_needed(project_name)
         platform_label = {
             "web": "Web Portal (React Vite / Next.js)",
             "mobile": "Mobile App (React Native)",

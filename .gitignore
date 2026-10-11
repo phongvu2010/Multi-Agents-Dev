@@ -1,11 +1,30 @@
-__pycache__
-.pytest_cache
+# Python & Testing Caches
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
 .coverage
 .coverage.*
 htmlcov/
 *.db
-
-.env
 .DS_Store
+.env
 
-*.pyc
+# Runtime Backups & Generated Releases
+workspaces/backups/
+workspaces/artifacts/05_handover/*.zip
+workspaces/artifacts/04_quality/htmlcov/
+workspaces/output_project/backend/data.db
+workspaces/output_project/backend/.coverage
+workspaces/output_project/backend/.pytest_cache/
+workspaces/output_project/frontend/node_modules/
+workspaces/output_project/frontend/.expo/
+workspaces/output_project/frontend/dist/
+
+# Runtime SDLC Checkpoints (Preserve .gitkeep)
+workspaces/checkpoints/*_checkpoint.json
+!workspaces/checkpoints/.gitkeep
+
+# Preserve Gitkeep markers for empty workspace scaffold
+!workspaces/output_project/.gitkeep
+!workspaces/artifacts/*/.gitkeep

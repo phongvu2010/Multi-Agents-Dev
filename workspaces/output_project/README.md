@@ -1,21 +1,13 @@
-# MotoCare_Upgrade
-> Dự án được phân tích, thiết kế, lập trình và kiểm thử tự động bởi Hệ thống AI Multi-Agents (Google Antigravity SDK).
+# 🚀 WORKSPACE OUTPUT PROJECT (RUNTIME DIRECTORY)
 
-## 🚀 Tech Stack
-- **Backend:** Python (FastAPI)
-- **Frontend / Mobile:** React Native / Node.js
-- **Database:** PostgreSQL
-- **Orchestration:** Google Antigravity SDK
+Thư mục này là **Runtime Output Workspace** dành cho các tác tử AI (Sub-Team 3 & Sub-Team 4).
 
-## 📁 Cấu trúc thư mục
-- `backend/`: API logic, models, controllers
-- `frontend/`: Ứng dụng mobile React Native
-- `infra/`: Dockerfile & docker-compose
-
-## 🔧 Cài đặt & Vận hành
+Khi bạn khởi chạy chu trình SDLC bằng lệnh:
 ```bash
-# Chạy Backend Local
-cd backend
-pip install -r requirements.txt
-python main.py
+make dev PROJECT="Tên_Dự_Án" FILE="workspaces/sample_client_brief.md" PLATFORM="web"
 ```
+Mã nguồn hoàn chỉnh của dự án mới (Backend FastAPI, Frontend React/React Native, và Docker Compose) sẽ được tự động sinh và kiểm thử trực tiếp tại đây.
+
+---
+
+> 💡 **Gợi ý:** Để xem mã nguồn dự án mẫu hoàn chỉnh đã được kiểm thử đạt 90% Code Coverage & Zero Schema Drift, hãy tham khảo thư mục: [`examples/motocare_reference/`](../../examples/motocare_reference/).
