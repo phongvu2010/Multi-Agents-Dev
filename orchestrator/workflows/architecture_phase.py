@@ -42,7 +42,8 @@ Nhiệm vụ:
 4. Phân rã backlog thành danh sách Tasks có depends_on để đưa vào DAG Execution Engine.
 Xuất dữ liệu đúng ArchitectureResult schema.
 """
-    console.print("  [bold yellow]• Thiết kế Kiến trúc & Phân rã DAG Task (Structured Output)...[/bold yellow]")
+    model_tag = f"{getattr(agent, 'model', 'N/A')} [{getattr(agent, 'model_tier', 'pro').upper()}]"
+    console.print(f"  [bold yellow]• Thiết kế Kiến trúc & Phân rã DAG Task (Mô hình: {model_tag})...[/bold yellow]")
     async with agent:
         resp = await agent.chat(prompt)
         arch_result: ArchitectureResult = await resp.structured_output()

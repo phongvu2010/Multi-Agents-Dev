@@ -7,7 +7,7 @@ PROJECT ?= MotoCare_Upgrade
 FILE ?= workspaces/sample_client_brief.md
 PLATFORM ?= auto
 
-.PHONY: help dev dev-quick resume sync status test-all test-backend test-frontend test-frontend-unit test-frontend-e2e check-db cov-html run-backend run-frontend clean install
+.PHONY: help dev dev-quick resume sync status models subteams test-all test-backend test-frontend test-frontend-unit test-frontend-e2e check-db cov-html run-backend run-frontend clean install
 
 help:
 	@echo ""
@@ -19,6 +19,8 @@ help:
 	@echo "  make resume [PROJECT=...]            Khởi phục chu trình từ Checkpoint"
 	@echo "  make sync [PROJECT=...]              Đồng bộ mã nguồn vào SDLC Checkpoint"
 	@echo "  make status [PROJECT=...]            Kiểm tra trạng thái Gates & Tests (Read-only)"
+	@echo "  make models                          Hiển thị Ma Trận Phân Bổ Mô Hình AI & Chi Phí Token"
+	@echo "  make subteams                        Xem danh sách 5 Native Sub-Teams & Kỹ năng"
 	@echo "  make test-all                        Thực thi toàn bộ PyTest (Coverage) & Frontend (Unit+E2E)"
 	@echo "  make test-backend                    Chạy PyTest Backend kèm đo độ phủ (Coverage)"
 	@echo "  make cov-html                        Xuất báo cáo Code Coverage dạng HTML"
@@ -32,6 +34,12 @@ help:
 	@echo "  make install                         Cài đặt thư viện phụ thuộc Python"
 	@echo "=========================================================================="
 	@echo ""
+
+models:
+	$(PYTHON) -m orchestrator.agent_factory --models
+
+subteams:
+	$(PYTHON) -m orchestrator.agent_factory --list
 
 install:
 	$(PYTHON) -m pip install -r requirements.txt

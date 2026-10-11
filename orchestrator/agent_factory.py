@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 from typing import Dict, Any, Optional, Type, List
 from pydantic import BaseModel
+import yaml
 
 try:
     from google.antigravity import Agent, LocalAgentConfig, CapabilitiesConfig
@@ -50,16 +51,143 @@ from orchestrator.schemas import (
 )
 
 
+class ModelRouter:
+    """Bộ định tuyến và phân bổ mô hình AI (Model Router & Cost Allocator).
+
+    Tối ưu hóa chi phí token và hiệu năng nhận thức trên Google Antigravity 2.0 & Gemini API:
+    - Tier PRO (gemini-2.5-pro / gemini-3.8-pro): Kiến trúc phân tầng Clean Architecture, STRIDE Threat Modeling, OWASP Security Audit, Code Review chuyên sâu.
+    - Tier FLASH (gemini-2.5-flash / gemini-3.8-flash): Bóc tách PRD, User Stories (Gherkin), UI Components, DAG Backlog, PyTest runner, Auto-Healing.
+    - Tier FLASH-LITE (gemini-2.5-flash-lite): Client Liaison Q&A, UAT Checklist, User Manual, Release Manifest, Dockerfile template, Secret regex scanning.
+    """
+
+    def __init__(self, config_path: Optional[Path] = None):
+        self.config_path = config_path
+        self.config: Dict[str, Any] = {}
+        if config_path and config_path.exists():
+            try:
+                with open(config_path, "r", encoding="utf-8") as f:
+                    self.config = yaml.safe_load(f) or {}
+            except Exception:
+                self.config = {}
+
+    def get_tier_model(self, tier: str) -> str:
+        """Lấy tên model cho một tier ('pro', 'flash', 'flash_lite'), hỗ trợ override qua biến môi trường."""
+        tier_clean = tier.lower().strip()
+        tier_config = self.config.get("tiers", {}).get(tier_clean, {})
+        env_key = tier_config.get("env_override_key") or f"GEMINI_{tier_clean.upper()}_MODEL"
+        default_model = tier_config.get("default_model") or {
+            "pro": "gemini-2.5-pro",
+            "flash": "gemini-2.5-flash",
+            "flash_lite": "gemini-2.5-flash-lite"
+        }.get(tier_clean, "gemini-2.5-flash")
+        
+        return os.getenv(env_key, default_model)
+
+    def get_tier_for_team(self, team_name: str) -> str:
+        """Lấy tier danh định cho một Sub-Team."""
+        clean_team = team_name.lower().replace("-", "_").replace("@", "")
+        if "discovery" in clean_team or "subteam_1" in clean_team:
+            canonical_team = "discovery_team"
+            default_tier = "flash"
+        elif "architecture" in clean_team or "subteam_2" in clean_team:
+            canonical_team = "architecture_team"
+            default_tier = "pro"
+        elif "engineering" in clean_team or "subteam_3" in clean_team:
+            canonical_team = "engineering_team"
+            default_tier = "pro"
+        elif "qa" in clean_team or "subteam_4" in clean_team or "quality" in clean_team:
+            canonical_team = "qa_team"
+            default_tier = "flash"
+        elif "release" in clean_team or "subteam_5" in clean_team or "handover" in clean_team:
+            canonical_team = "release_team"
+            default_tier = "flash_lite"
+        else:
+            canonical_team = clean_team
+            default_tier = "flash"
+
+        team_cfg = self.config.get("subteams", {}).get(canonical_team, {})
+        return team_cfg.get("default_tier", default_tier)
+
+    def get_model_for_team(self, team_name: str, subagent_role: Optional[str] = None) -> tuple[str, str]:
+        """Trả về tuple (model_id, tier) cho Sub-Team hoặc Subagent cụ thể."""
+        clean_team = team_name.lower().replace("-", "_").replace("@", "")
+        if "discovery" in clean_team or "subteam_1" in clean_team:
+            canonical_team = "discovery_team"
+            default_tier = "flash"
+            team_env = "DISCOVERY_MODEL"
+        elif "architecture" in clean_team or "subteam_2" in clean_team:
+            canonical_team = "architecture_team"
+            default_tier = "pro"
+            team_env = "ARCHITECTURE_MODEL"
+        elif "engineering" in clean_team or "subteam_3" in clean_team:
+            canonical_team = "engineering_team"
+            default_tier = "pro"
+            team_env = "ENGINEERING_MODEL"
+        elif "qa" in clean_team or "subteam_4" in clean_team or "quality" in clean_team:
+            canonical_team = "qa_team"
+            default_tier = "flash"
+            team_env = "QA_MODEL"
+        elif "release" in clean_team or "subteam_5" in clean_team or "handover" in clean_team:
+            canonical_team = "release_team"
+            default_tier = "flash_lite"
+            team_env = "RELEASE_MODEL"
+        else:
+            canonical_team = clean_team
+            default_tier = "flash"
+            team_env = None
+
+        if team_env and os.getenv(team_env):
+            return os.getenv(team_env), "custom"
+
+        team_cfg = self.config.get("subteams", {}).get(canonical_team, {})
+        if subagent_role and "subagents" in team_cfg:
+            role_cfg = team_cfg["subagents"].get(subagent_role.lower(), {})
+            if isinstance(role_cfg, dict) and "tier" in role_cfg:
+                target_tier = role_cfg["tier"]
+                return self.get_tier_model(target_tier), target_tier
+            elif isinstance(role_cfg, str):
+                return self.get_tier_model(role_cfg), role_cfg
+
+        target_tier = team_cfg.get("default_tier", default_tier)
+        return self.get_tier_model(target_tier), target_tier
+
+    def get_allocation_matrix(self) -> List[Dict[str, Any]]:
+        """Trả về ma trận phân bổ toàn diện để hiển thị CLI & tài liệu."""
+        matrix = []
+        teams_data = [
+            ("discovery_team", "@discovery_team", "Product Discovery & Requirements", "flash", "PRD SMART, User Stories (Gherkin), Clarification Q&A"),
+            ("architecture_team", "@architecture_team", "System & Security Architecture", "pro", "Clean Arch 5 tầng, ERD, OpenAPI 3.0.3, STRIDE Matrix"),
+            ("engineering_team", "@engineering_team", "Core Engineering & Implementation", "pro", "FastAPI Clean Arch, SQLAlchemy 2.0 ORM, UI Screens"),
+            ("qa_team", "@qa_team", "Quality Assurance & Security Audit", "flash", "Triple-Verification PyTest/Alembic, OWASP Audit, Auto-Healing"),
+            ("release_team", "@release_team", "Release & Client Handover", "flash_lite", "UAT Checklist, User Manual, Release Manifest (.zip)")
+        ]
+        for team_key, mention, role, def_tier, desc in teams_data:
+            model_id, tier = self.get_model_for_team(team_key)
+            cost_factor = self.config.get("tiers", {}).get(tier, {}).get("relative_cost_factor", 1.0)
+            matrix.append({
+                "team_key": team_key,
+                "mention": mention,
+                "role": role,
+                "tier": tier.upper(),
+                "model_id": model_id,
+                "desc": desc,
+                "cost_factor": f"{cost_factor}x"
+            })
+        return matrix
+
+
 class AgentFactory:
     """Factory khởi tạo các Agents và Sub-Teams sử dụng Google Antigravity SDK & Native Tooling."""
 
     def __init__(self, base_dir: Path, api_key: Optional[str] = None):
         self.base_dir = base_dir
+        self.config_dir = base_dir / "config"
         self.skills_dir = (base_dir / ".agents" / "skills") if (base_dir / ".agents" / "skills").exists() else (base_dir / "skills")
         self.prompts_dir = base_dir / "config" / "prompts"
         self.rules_dir = (base_dir / ".agents" / "rules") if (base_dir / ".agents" / "rules").exists() else (base_dir / "rules")
         self.subteams_dir = base_dir / ".agents" / "subteams"
         self.api_key = api_key or os.getenv("GEMINI_API_KEY")
+        self.model_router = ModelRouter(self.config_dir / "model_router.yaml")
 
     def _read_prompt(self, filename: str) -> str:
         prompt_path = self.prompts_dir / filename
@@ -113,9 +241,11 @@ class AgentFactory:
     def create_discovery_team(
         self,
         tech_lead_profile: Dict[str, Any],
-        response_schema: Optional[Type[BaseModel]] = DiscoveryResult
+        response_schema: Optional[Type[BaseModel]] = DiscoveryResult,
+        model: Optional[str] = None
     ):
-        """Khởi tạo Sub-Team 1: Product Discovery hỗ trợ Structured Output & MCP Servers."""
+        """Khởi tạo Sub-Team 1: Product Discovery hỗ trợ Structured Output & MCP Servers (Tier: FLASH)."""
+        resolved_model, tier = self.model_router.get_model_for_team("discovery_team") if not model else (model, "custom")
         prompt = self._read_prompt("subteam_1_discovery.md")
         rules = self._load_rules()
         mcp_context = self._get_mcp_context_instructions()
@@ -127,6 +257,7 @@ HỆ THỐNG TIÊU CHUẨN & QUY TẮC CỐT LÕI:
 {mcp_context}
 HỒ SƠ TECH LEAD & HỆ THỐNG:
 - Tech Lead ưu tiên review: {tech_lead_profile.get('tech_lead', {}).get('familiar_stacks', {})}
+- Mô hình nhận thức phân bổ: {resolved_model} (Tier: {tier.upper()})
 - Mục tiêu: Chuyển đổi yêu cầu thô từ khách hàng thành đặc tả có cấu trúc chuẩn xác (PRD, Gherkin User Stories, UI/UX Flows).
 """
         if HAS_ANTIGRAVITY_SDK and self.api_key:
@@ -135,6 +266,7 @@ HỒ SƠ TECH LEAD & HỆ THỐNG:
                 "api_key": self.api_key,
                 "skills_paths": [str(self.skills_dir)] if self.skills_dir.exists() else None,
                 "system_instructions": system_instruction,
+                "model": resolved_model,
             }
             if cap:
                 config_kwargs["capabilities"] = cap
@@ -144,14 +276,23 @@ HỒ SƠ TECH LEAD & HỆ THỐNG:
                 config_kwargs["policies"] = [policy.allow_all()]
             return Agent(LocalAgentConfig(**{k: v for k, v in config_kwargs.items() if v is not None}))
         
-        return DynamicAgent("Discovery Sub-Team", system_instruction, response_schema=response_schema, api_key=self.api_key)
+        return DynamicAgent(
+            "Discovery Sub-Team",
+            system_instruction,
+            response_schema=response_schema,
+            api_key=self.api_key,
+            model=resolved_model,
+            model_tier=tier
+        )
 
     def create_architecture_team(
         self,
         tech_lead_profile: Dict[str, Any],
-        response_schema: Optional[Type[BaseModel]] = ArchitectureResult
+        response_schema: Optional[Type[BaseModel]] = ArchitectureResult,
+        model: Optional[str] = None
     ):
-        """Khởi tạo Sub-Team 2: Architecture & Planning."""
+        """Khởi tạo Sub-Team 2: Architecture & Planning (Tier: PRO)."""
+        resolved_model, tier = self.model_router.get_model_for_team("architecture_team") if not model else (model, "custom")
         prompt = self._read_prompt("subteam_2_architecture.md")
         profile_notes = tech_lead_profile.get("tech_lead", {}).get("architectural_preference", {}).get("explanation", "")
         rules = self._load_rules()
@@ -162,6 +303,7 @@ HỒ SƠ TECH LEAD & HỆ THỐNG:
 TIÊU CHUẨN KIẾN TRÚC & CODING:
 {rules}
 {mcp_context}
+MÔ HÌNH NHẬN THỨC PHÂN BỔ: {resolved_model} (Tier: {tier.upper()})
 ĐẶC BIỆT LƯU Ý VỀ TECH STACK THEO YÊU CẦU CỦA TECH LEAD:
 {profile_notes}
 Nếu yêu cầu bài toán phù hợp, HÃY ƯU TIÊN CHỌN:
@@ -175,6 +317,7 @@ Nếu yêu cầu bài toán phù hợp, HÃY ƯU TIÊN CHỌN:
                 "api_key": self.api_key,
                 "skills_paths": [str(self.skills_dir)] if self.skills_dir.exists() else None,
                 "system_instructions": system_instruction,
+                "model": resolved_model,
             }
             if cap:
                 config_kwargs["capabilities"] = cap
@@ -184,14 +327,23 @@ Nếu yêu cầu bài toán phù hợp, HÃY ƯU TIÊN CHỌN:
                 config_kwargs["policies"] = [policy.allow_all()]
             return Agent(LocalAgentConfig(**{k: v for k, v in config_kwargs.items() if v is not None}))
 
-        return DynamicAgent("Architecture Sub-Team", system_instruction, response_schema=response_schema, api_key=self.api_key)
+        return DynamicAgent(
+            "Architecture Sub-Team",
+            system_instruction,
+            response_schema=response_schema,
+            api_key=self.api_key,
+            model=resolved_model,
+            model_tier=tier
+        )
 
     def create_engineering_team(
         self,
         tech_stack: Dict[str, Any],
-        workspace_dir: Optional[Path] = None
+        workspace_dir: Optional[Path] = None,
+        model: Optional[str] = None
     ):
-        """Khởi tạo Sub-Team 3: Core Engineering (trang bị Native Tools: Viết code & tạo thư mục)."""
+        """Khởi tạo Sub-Team 3: Core Engineering (Tier: PRO/FLASH Hybrid)."""
+        resolved_model, tier = self.model_router.get_model_for_team("engineering_team") if not model else (model, "custom")
         prompt = self._read_prompt("subteam_3_engineering.md")
         rules = self._load_rules()
         mcp_context = self._get_mcp_context_instructions()
@@ -201,6 +353,7 @@ Nếu yêu cầu bài toán phù hợp, HÃY ƯU TIÊN CHỌN:
 TIÊU CHUẨN MÃ NGUỒN:
 {rules}
 {mcp_context}
+MÔ HÌNH NHẬN THỨC PHÂN BỔ: {resolved_model} (Tier: {tier.upper()})
 TECH STACK ĐÃ PHÊ DUYỆT BỞI TECH LEAD:
 {tech_stack}
 Hãy lập trình mã nguồn hoàn chỉnh chuẩn Clean Architecture, type hints đầy đủ, và tương thích 100% với openapi.yaml.
@@ -211,6 +364,7 @@ Hãy lập trình mã nguồn hoàn chỉnh chuẩn Clean Architecture, type hin
                 "api_key": self.api_key,
                 "skills_paths": [str(self.skills_dir)] if self.skills_dir.exists() else None,
                 "system_instructions": system_instruction,
+                "model": resolved_model,
             }
             if cap:
                 config_kwargs["capabilities"] = cap
@@ -218,10 +372,21 @@ Hãy lập trình mã nguồn hoàn chỉnh chuẩn Clean Architecture, type hin
                 config_kwargs["policies"] = [policy.allow_all()]
             return Agent(LocalAgentConfig(**{k: v for k, v in config_kwargs.items() if v is not None}))
 
-        return DynamicAgent("Engineering Sub-Team", system_instruction, api_key=self.api_key)
+        return DynamicAgent(
+            "Engineering Sub-Team",
+            system_instruction,
+            api_key=self.api_key,
+            model=resolved_model,
+            model_tier=tier
+        )
 
-    def create_qa_team(self, response_schema: Optional[Type[BaseModel]] = QAReportResult):
-        """Khởi tạo Sub-Team 4: QA & Security (trang bị Native Tools: chạy PyTest & rà soát bảo mật)."""
+    def create_qa_team(
+        self,
+        response_schema: Optional[Type[BaseModel]] = QAReportResult,
+        model: Optional[str] = None
+    ):
+        """Khởi tạo Sub-Team 4: QA & Security (Tier: FLASH với Dual-Tier PRO Audit)."""
+        resolved_model, tier = self.model_router.get_model_for_team("qa_team") if not model else (model, "custom")
         prompt = self._read_prompt("subteam_4_qa.md")
         rules = self._load_rules()
         mcp_context = self._get_mcp_context_instructions()
@@ -231,6 +396,7 @@ Hãy lập trình mã nguồn hoàn chỉnh chuẩn Clean Architecture, type hin
 TIÊU CHÍ REVIEW & BẢO MẬT:
 {rules}
 {mcp_context}
+MÔ HÌNH NHẬN THỨC PHÂN BỔ: {resolved_model} (Tier: {tier.upper()})
 """
         if HAS_ANTIGRAVITY_SDK and self.api_key:
             cap = CapabilitiesConfig(enable_subagents=True) if CapabilitiesConfig else None
@@ -238,6 +404,7 @@ TIÊU CHÍ REVIEW & BẢO MẬT:
                 "api_key": self.api_key,
                 "skills_paths": [str(self.skills_dir)] if self.skills_dir.exists() else None,
                 "system_instructions": system_instruction,
+                "model": resolved_model,
             }
             if cap:
                 config_kwargs["capabilities"] = cap
@@ -247,19 +414,28 @@ TIÊU CHÍ REVIEW & BẢO MẬT:
                 config_kwargs["policies"] = [policy.allow_all()]
             return Agent(LocalAgentConfig(**{k: v for k, v in config_kwargs.items() if v is not None}))
 
-        return DynamicAgent("QA & Security Sub-Team", system_instruction, response_schema=response_schema, api_key=self.api_key)
+        return DynamicAgent(
+            "QA & Security Sub-Team",
+            system_instruction,
+            response_schema=response_schema,
+            api_key=self.api_key,
+            model=resolved_model,
+            model_tier=tier
+        )
 
-    def create_release_team(self):
-        """Khởi tạo Sub-Team 5: Release & Handover."""
+    def create_release_team(self, model: Optional[str] = None):
+        """Khởi tạo Sub-Team 5: Release & Handover (Tier: FLASH-LITE)."""
+        resolved_model, tier = self.model_router.get_model_for_team("release_team") if not model else (model, "custom")
         prompt = self._read_prompt("subteam_5_release.md")
         mcp_context = self._get_mcp_context_instructions()
-        system_instruction = f"{prompt}\n{self._load_rules()}\n{mcp_context}"
+        system_instruction = f"{prompt}\n{self._load_rules()}\n{mcp_context}\nMÔ HÌNH NHẬN THỨC PHÂN BỔ: {resolved_model} (Tier: {tier.upper()})"
         if HAS_ANTIGRAVITY_SDK and self.api_key:
             cap = CapabilitiesConfig(enable_subagents=True) if CapabilitiesConfig else None
             config_kwargs = {
                 "api_key": self.api_key,
                 "skills_paths": [str(self.skills_dir)] if self.skills_dir.exists() else None,
                 "system_instructions": system_instruction,
+                "model": resolved_model,
             }
             if cap:
                 config_kwargs["capabilities"] = cap
@@ -267,10 +443,16 @@ TIÊU CHÍ REVIEW & BẢO MẬT:
                 config_kwargs["policies"] = [policy.allow_all()]
             return Agent(LocalAgentConfig(**{k: v for k, v in config_kwargs.items() if v is not None}))
 
-        return DynamicAgent("Release & Handover Sub-Team", system_instruction, api_key=self.api_key)
+        return DynamicAgent(
+            "Release & Handover Sub-Team",
+            system_instruction,
+            api_key=self.api_key,
+            model=resolved_model,
+            model_tier=tier
+        )
 
     def list_subteams(self) -> list:
-        """Liệt kê danh sách các Native Sub-Teams được định nghĩa trong .agents/subteams."""
+        """Liệt kê danh sách các Native Sub-Teams được định nghĩa trong .agents/subteams kèm Model Tier."""
         subteams = []
         if self.subteams_dir.exists():
             for sf in sorted(self.subteams_dir.glob("*.md")):
@@ -282,10 +464,13 @@ TIÊU CHÍ REVIEW & BẢO MẬT:
                         if ":" in line:
                             k, v = line.split(":", 1)
                             meta[k.strip()] = v.strip()
+                model_id, tier = self.model_router.get_model_for_team(sf.stem)
                 subteams.append({
                     "id": sf.stem,
                     "name": meta.get("name", sf.stem),
                     "role": meta.get("role", "SDLC Subagent"),
+                    "tier": meta.get("model", tier).upper(),
+                    "model_id": model_id,
                     "description": meta.get("description", ""),
                     "path": str(sf)
                 })
@@ -294,28 +479,37 @@ TIÊU CHÍ REVIEW & BẢO MẬT:
     def get_subteam(self, team_name: str, **kwargs):
         """Khởi tạo Native Sub-Team tương ứng theo tên gọi (@discovery_team, @architecture_team, v.v.)."""
         clean_name = team_name.lower().replace("-", "_").replace("@", "")
+        model_override = kwargs.get("model")
         if "discovery" in clean_name or "subteam_1" in clean_name:
             tech_lead_profile = kwargs.get("tech_lead_profile", {"tech_lead": {"familiar_stacks": {"backend": ["Python (FastAPI)"]}}})
-            return self.create_discovery_team(tech_lead_profile=tech_lead_profile)
+            return self.create_discovery_team(tech_lead_profile=tech_lead_profile, model=model_override)
         elif "architecture" in clean_name or "subteam_2" in clean_name:
             tech_lead_profile = kwargs.get("tech_lead_profile", {"tech_lead": {"familiar_stacks": {"backend": ["Python (FastAPI)"]}}})
-            return self.create_architecture_team(tech_lead_profile=tech_lead_profile)
+            return self.create_architecture_team(tech_lead_profile=tech_lead_profile, model=model_override)
         elif "engineering" in clean_name or "subteam_3" in clean_name:
             tech_stack = kwargs.get("tech_stack", {"backend": "Python/FastAPI", "frontend": "React Native"})
-            return self.create_engineering_team(tech_stack=tech_stack, workspace_dir=kwargs.get("workspace_dir"))
+            return self.create_engineering_team(tech_stack=tech_stack, workspace_dir=kwargs.get("workspace_dir"), model=model_override)
         elif "qa" in clean_name or "subteam_4" in clean_name or "quality" in clean_name:
-            return self.create_qa_team()
+            return self.create_qa_team(model=model_override)
         elif "release" in clean_name or "subteam_5" in clean_name or "handover" in clean_name:
-            return self.create_release_team()
+            return self.create_release_team(model=model_override)
         else:
             raise ValueError(f"Không nhận diện được Sub-Team: '{team_name}'. Các Sub-Teams hợp lệ: discovery_team, architecture_team, engineering_team, qa_team, release_team.")
 
 
 class DynamicAgentResponse:
-    """Đối tượng phản hồi hỗ trợ cả .text() và .structured_output()."""
-    def __init__(self, text_content: str, structured_data: Optional[Any] = None):
+    """Đối tượng phản hồi hỗ trợ cả .text(), .structured_output() và truy vết model / cost."""
+    def __init__(
+        self,
+        text_content: str,
+        structured_data: Optional[Any] = None,
+        model_used: Optional[str] = None,
+        model_tier: Optional[str] = None
+    ):
         self._text = text_content
         self._structured_data = structured_data
+        self.model_used = model_used or "adaptive_offline_synthesizer"
+        self.model_tier = model_tier or "default"
 
     async def text(self) -> str:
         return self._text
@@ -327,11 +521,21 @@ class DynamicAgentResponse:
 class DynamicAgent:
     """Agent thông minh tự động trích xuất ngữ cảnh và sinh Structured Output linh hoạt theo bài toán."""
 
-    def __init__(self, name: str, instruction: str, response_schema: Optional[Type[BaseModel]] = None, api_key: Optional[str] = None):
+    def __init__(
+        self,
+        name: str,
+        instruction: str,
+        response_schema: Optional[Type[BaseModel]] = None,
+        api_key: Optional[str] = None,
+        model: Optional[str] = None,
+        model_tier: Optional[str] = None
+    ):
         self.name = name
         self.instruction = instruction
         self.response_schema = response_schema
         self.api_key = api_key or os.getenv("GEMINI_API_KEY")
+        self.model = model or "gemini-2.5-flash"
+        self.model_tier = model_tier or "flash"
 
     async def __aenter__(self):
         return self
@@ -355,16 +559,31 @@ class DynamicAgent:
                         "response_schema": self.response_schema,
                     }
                 gen_resp = client.models.generate_content(
-                    model="gemini-2.5-flash",
+                    model=self.model,
                     contents=f"{self.instruction}\n\n{prompt}",
                     **kwargs
                 )
                 if self.response_schema:
                     if hasattr(gen_resp, "parsed") and gen_resp.parsed is not None:
-                        return DynamicAgentResponse(gen_resp.text, structured_data=gen_resp.parsed)
+                        return DynamicAgentResponse(
+                            gen_resp.text,
+                            structured_data=gen_resp.parsed,
+                            model_used=self.model,
+                            model_tier=self.model_tier
+                        )
                     data = json.loads(gen_resp.text)
-                    return DynamicAgentResponse(gen_resp.text, structured_data=self.response_schema.model_validate(data))
-                return DynamicAgentResponse(gen_resp.text, structured_data=None)
+                    return DynamicAgentResponse(
+                        gen_resp.text,
+                        structured_data=self.response_schema.model_validate(data),
+                        model_used=self.model,
+                        model_tier=self.model_tier
+                    )
+                return DynamicAgentResponse(
+                    gen_resp.text,
+                    structured_data=None,
+                    model_used=self.model,
+                    model_tier=self.model_tier
+                )
             except Exception:
                 # Chuyển tiếp mượt mà sang Adaptive Domain Synthesis khi offline / sandbox
                 pass
@@ -653,8 +872,13 @@ paths:
                 ]
             )
 
-        text_response = f"[{self.name}] Đã xử lý yêu cầu cho dự án '{project_name}' thành công."
-        return DynamicAgentResponse(text_response, structured_data=structured_obj)
+        text_response = f"[{self.name} | Model: {self.model} ({self.model_tier.upper()})] Đã xử lý yêu cầu cho dự án '{project_name}' thành công."
+        return DynamicAgentResponse(
+            text_response,
+            structured_data=structured_obj,
+            model_used=self.model,
+            model_tier=self.model_tier
+        )
 
 
 if __name__ == "__main__":
@@ -665,8 +889,9 @@ if __name__ == "__main__":
     from rich.panel import Panel
 
     console = Console()
-    parser = argparse.ArgumentParser(description="Google Antigravity 2.0 Native Subagent Dispatcher")
-    parser.add_argument("--list", action="store_true", help="Liệt kê toàn bộ Native Sub-Teams trong .agents/subteams")
+    parser = argparse.ArgumentParser(description="Google Antigravity 2.0 Native Subagent Dispatcher & Model Allocator")
+    parser.add_argument("--list", action="store_true", help="Liệt kê toàn bộ Native Sub-Teams trong .agents/subteams kèm Model Tier")
+    parser.add_argument("--models", action="store_true", help="Hiển thị Ma Trận Phân Bổ Mô Hình AI & Tối Ưu Chi Phí Token (Model Allocation Matrix)")
     parser.add_argument("--subteam", help="Tên Sub-Team cần triệu hồi (vd: discovery_team, architecture_team, engineering_team, qa_team, release_team)")
     parser.add_argument("--prompt", help="Chỉ thị hoặc context yêu cầu gửi đến Sub-Team")
     parser.add_argument("--project", default="SmartApp", help="Tên dự án phần mềm")
@@ -674,25 +899,40 @@ if __name__ == "__main__":
 
     factory = AgentFactory(Path(__file__).parent.parent)
 
-    if args.list:
+    if args.models:
+        matrix = factory.model_router.get_allocation_matrix()
+        table = Table(title="Ma Trận Phân Bổ Mô Hình AI & Tối Ưu Chi Phí Token (Google Antigravity 2.0)", border_style="cyan")
+        table.add_column("Sub-Team (@mention)", style="bold yellow")
+        table.add_column("Vai Trò (Role)", style="white")
+        table.add_column("Tầng (Tier)", style="bold cyan")
+        table.add_column("Mô Hình Gán (Model ID)", style="bold green")
+        table.add_column("Hệ Số Chi Phí", style="magenta")
+        table.add_column("Tác Vụ Trọng Tâm & Lý Do Phân Bổ", style="dim")
+        for row in matrix:
+            table.add_row(row["mention"], row["role"], row["tier"], row["model_id"], row["cost_factor"], row["desc"])
+        console.print(table)
+    elif args.list:
         subteams = factory.list_subteams()
         table = Table(title="Danh Sách Native Sub-Teams Antigravity 2.0 (.agents/subteams)", border_style="cyan")
         table.add_column("Tên Sub-Team (@mention)", style="bold yellow")
         table.add_column("Vai Trò (Role)", style="green")
+        table.add_column("Tầng (Tier)", style="bold cyan")
+        table.add_column("Mô Hình Gán (Model ID)", style="bold green")
         table.add_column("Mô Tả & Kỹ Năng", style="white")
         for st in subteams:
-            table.add_row(f"@{st['name']}", st["role"], st["description"])
+            table.add_row(f"@{st['name']}", st["role"], st["tier"], st["model_id"], st["description"])
         console.print(table)
     elif args.subteam and args.prompt:
         async def run_dispatch():
+            agent = factory.get_subteam(args.subteam)
             console.print(Panel(
                 f"[bold cyan]Triệu hồi Native Sub-Team:[/bold cyan] [bold yellow]@{args.subteam}[/bold yellow]\n"
                 f"[bold]Dự án:[/bold] {args.project}\n"
-                f"[bold]Chỉ thị:[/bold] {args.prompt}",
+                f"[bold]Chỉ thị:[/bold] {args.prompt}\n"
+                f"[bold]Mô hình nhận thức:[/bold] [bold green]{agent.model}[/bold green] (Tier: [bold cyan]{agent.model_tier.upper()}[/bold cyan])",
                 title="Google Antigravity 2.0 Subagent Execution Canvas",
                 border_style="green"
             ))
-            agent = factory.get_subteam(args.subteam)
             full_prompt = f"Dự án: {args.project}\n\n{args.prompt}"
             async with agent:
                 resp = await agent.chat(full_prompt)

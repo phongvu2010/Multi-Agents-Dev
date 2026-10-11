@@ -64,7 +64,23 @@ Hệ thống được thiết kế tối ưu cho việc **Manual Review của Te
 
 ---
 
-## 🚦 3. QUY TRÌNH DUYỆT HUMAN-IN-THE-LOOP (HITL) TRONG ANTIGRAVITY 2.0
+## 🧠 3. MA TRẬN PHÂN BỔ MÔ HÌNH AI & TỐI ƯU CHI PHÍ TOKEN (MODEL ROUTING MATRIX)
+
+Hệ thống tối ưu chi phí vận hành bằng cách **phân bổ mô hình nhận thức đúng việc, đúng tầm** thay vì dùng một mô hình cồng kềnh cho toàn bộ quy trình:
+
+| Sub-Team | Tầng (Tier) | Mô Hình Mặc Định | Biến Môi Trường Override | Nhiệm Vụ & Lý Do Phân Bổ | Tiết Kiệm Chi Phí |
+| :--- | :---: | :---: | :---: | :--- | :---: |
+| **Sub-Team 1 (Discovery)** | `FLASH` | `gemini-2.5-flash` | `DISCOVERY_MODEL` / `GEMINI_FLASH_MODEL` | Bóc tách PRD chuẩn SMART, User Stories (Gherkin), Clarification Q&A. Cần tốc độ cao và cấu trúc chuẩn. | **-75%** vs Pro |
+| **Sub-Team 2 (Architecture)** | `PRO` | `gemini-2.5-pro` | `ARCHITECTURE_MODEL` / `GEMINI_PRO_MODEL` | Clean Architecture 5 tầng, ERD, OpenAPI 3.0.3, STRIDE Threat Modeling. Đòi hỏi tư duy kiến trúc bậc cao. | *Đầu tư trọng điểm* |
+| **Sub-Team 3 (Engineering)** | `PRO` / `FLASH` (Hybrid) | `gemini-2.5-pro` (Core) / `flash` (UI) | `ENGINEERING_MODEL` | Backend Clean Architecture dùng Pro; UI Components & Store dùng Flash; Docker dùng Flash-Lite. | **-60%** vs All-Pro |
+| **Sub-Team 4 (QA & Audit)** | `FLASH` / `PRO` (Dual) | `gemini-2.5-flash` (Runner) / `pro` (Audit) | `QA_MODEL` | PyTest runner và Auto-Healing dùng Flash; Thẩm định OWASP Top 10 và Code Review scorecard dùng Pro. | **-70%** vs All-Pro |
+| **Sub-Team 5 (Release)** | `FLASH-LITE` | `gemini-2.5-flash-lite` | `RELEASE_MODEL` / `GEMINI_FLASH_LITE_MODEL` | Tổng hợp UAT Checklist, User Manual, Release Manifest (.zip). Định dạng tài liệu không cần reasoning nặng. | **-90%** vs Pro |
+
+*Xem chi tiết ma trận mô hình qua lệnh: `make models` hoặc cấu hình tại `config/model_router.yaml`.*
+
+---
+
+## 🚦 4. QUY TRÌNH DUYỆT HUMAN-IN-THE-LOOP (HITL) TRONG ANTIGRAVITY 2.0
 
 Khi chạy trong IDE hoặc qua CLI Runner, hệ thống tự động sinh tài liệu đánh giá tương tác:
 - **Gate 1:** Kiểm tra `workspaces/artifacts/review_gate_1_prd.md` và `PRD.md` trên tab Artifacts.

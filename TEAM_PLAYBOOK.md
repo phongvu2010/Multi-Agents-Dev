@@ -77,6 +77,8 @@ Tất cả các thao tác thường ngày đã được chuẩn hóa qua `Makefi
 | `make resume PROJECT="Tên"` | Khôi phục chu trình SDLC từ Checkpoint gián đoạn gần nhất |
 | `make sync PROJECT="Tên"` | **Đồng bộ hóa mã nguồn thực tế ngược vào Checkpoint & State Machine** |
 | `make status PROJECT="Tên"` | Kiểm tra đối chiếu trạng thái Gate, PyTest (Coverage), Alembic Drift, Frontend (Unit+E2E) |
+| `make models` | **Hiển thị Ma Trận Phân Bổ Mô Hình AI & Tối Ưu Chi Phí Token (Model Matrix)** |
+| `make subteams` | Xem danh sách 5 Native Sub-Teams & Kỹ năng |
 | `make test-all` | Thực thi kiểm thử toàn diện Backend (PyTest Coverage), Alembic Drift và Frontend (Unit + E2E) |
 | `make test-backend` | Chạy bộ kiểm thử PyTest Backend FastAPI kèm đo độ phủ Code Coverage |
 | `make cov-html` | Xuất báo cáo trực quan Code Coverage dạng HTML (`htmlcov/index.html`) |

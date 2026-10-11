@@ -43,7 +43,8 @@ Nhiệm vụ:
 4. Viết User Stories chi tiết kèm Acceptance Criteria chuẩn cú pháp Gherkin.
 5. Định nghĩa Business Rules (BR-01, BR-02...) và thiết kế luồng màn hình UI/UX.
 """
-    console.print("  [bold yellow]• Phân tích yêu cầu & Sinh Structured Output (Pydantic)...[/bold yellow]")
+    model_tag = f"{getattr(agent, 'model', 'N/A')} [{getattr(agent, 'model_tier', 'flash').upper()}]"
+    console.print(f"  [bold yellow]• Phân tích yêu cầu & Sinh Structured Output (Mô hình: {model_tag})...[/bold yellow]")
     async with agent:
         resp = await agent.chat(prompt_discovery)
         discovery_result: DiscoveryResult = await resp.structured_output()

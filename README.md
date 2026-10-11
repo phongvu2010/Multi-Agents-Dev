@@ -137,6 +137,12 @@ Multi-Agents-Dev/
    - **Developer Team Playbook ([TEAM_PLAYBOOK.md](./TEAM_PLAYBOOK.md)):** Cẩm nang onboarding và vận hành chi tiết cho các lập trình viên và Tech Lead khi cộng tác với 15 AI Agents.
    - **Scaffolding Startup Script:** Bổ sung `setup_dev.sh` và `README.md` cho Frontend Web (Vite) và Mobile (Expo) giúp dev khởi chạy ngay lập tức.
 
+6. **Giai đoạn 7: Phân Bổ Mô Hình AI & Tối Ưu Chi Phí Token (Model Cost Routing Matrix)**
+   - **Định Tuyến Đa Tầng (3-Tier Model Allocation):** Thiết lập `config/model_router.yaml` phân bổ mô hình chính xác theo khối lượng nhận thức: **Tier PRO** (`gemini-2.5-pro`) cho Architecture, STRIDE Security & Code Review; **Tier FLASH** (`gemini-2.5-flash`) cho Discovery, UI & QA Runner; **Tier FLASH-LITE** (`gemini-2.5-flash-lite`) cho Release, Manifest & Documentation.
+   - **Tiết Kiệm Chi Phí Vận Hành:** Giảm từ 60% đến 90% chi phí token so với việc dùng mô hình Pro đại trà, đồng thời đảm bảo chất lượng thiết kế kiến trúc cao nhất.
+   - **Tích Hợp Sâu Antigravity SDK & Native YAML:** Cập nhật trường `model` trong frontmatter của 5 Sub-Teams (`.agents/subteams/`), tự động hiển thị trong CLI qua `make models` và `make subteams`.
+
+
 ---
 
 ## 🚀 Hướng Dẫn Vận Hành

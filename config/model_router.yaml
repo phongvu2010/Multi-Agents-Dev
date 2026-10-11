@@ -1,0 +1,124 @@
+# ==============================================================================
+# CẤU HÌNH PHÂN BỔ MÔ HÌNH AI & TỐI ƯU CHI PHÍ TOKEN (MODEL ALLOCATION MATRIX)
+# Hệ thống Multi-Agents SDLC chạy trên Google Antigravity 2.0 & Gemini API
+# ==============================================================================
+
+tiers:
+  pro:
+    default_model: "gemini-2.5-pro"
+    env_override_key: "GEMINI_PRO_MODEL"
+    description: "Khả năng suy luận bậc cao, thiết kế kiến trúc phân tầng, phân tích bảo mật STRIDE/OWASP và refactor phức tạp."
+    relative_cost_factor: 5.0
+    recommended_tasks:
+      - "Kiến trúc hệ thống Clean Architecture 5 tầng"
+      - "Phân tích mô hình đe dọa STRIDE & ma trận RBAC"
+      - "Code Review chuyên sâu & Thẩm định bảo mật OWASP Top 10"
+      - "Deep Domain Code Synthesis & Complex Algorithms"
+
+  flash:
+    default_model: "gemini-2.5-flash"
+    env_override_key: "GEMINI_FLASH_MODEL"
+    description: "Cân bằng hoàn hảo giữa tốc độ, độ chuẩn xác cấu trúc, phân tích nghiệp vụ và chi phí vận hành."
+    relative_cost_factor: 1.0
+    recommended_tasks:
+      - "Bóc tách PRD, SMART Goals, User Stories (Gherkin)"
+      - "Xây dựng luồng màn hình UI/UX và components frontend"
+      - "Điều phối DAG Tasks và quản lý dependencies"
+      - "QA Automation Runner & Auto-Healing Patch Application"
+
+  flash_lite:
+    default_model: "gemini-2.5-flash-lite"
+    env_override_key: "GEMINI_FLASH_LITE_MODEL"
+    description: "Tốc độ siêu nhanh, tiêu thụ token tối thiểu, chuyên trách tổng hợp văn bản, viết tài liệu và quét cú pháp."
+    relative_cost_factor: 0.25
+    recommended_tasks:
+      - "Làm rõ yêu cầu sơ bộ (Clarification Q&A)"
+      - "Viết tài liệu người dùng (USER_MANUAL.md, README.md)"
+      - "Lập bảng kiểm nghiệm thu (UAT_CHECKLIST.md)"
+      - "Đóng gói Release Manifest và tính mã băm Checksum"
+      - "Quét tĩnh regex (Secret Scanner, Linter formatting)"
+
+# Phân bổ chi tiết theo 5 Sub-Teams & từng Subagent chuyên trách
+subteams:
+  discovery_team:
+    default_tier: "flash"
+    env_override_key: "DISCOVERY_MODEL"
+    rationale: "Bóc tách yêu cầu thô thành PRD và User Stories Gherkin cần tốc độ cao và cấu trúc chuẩn mà không cần mô hình reasoning đắt đỏ."
+    subagents:
+      client_liaison:
+        tier: "flash_lite"
+        role: "Tiếp nhận câu hỏi và phân loại sơ bộ"
+      ba_po:
+        tier: "flash"
+        role: "Sinh PRD chuẩn SMART và Gherkin User Stories"
+      ui_ux_concept:
+        tier: "flash"
+        role: "Phác thảo luồng màn hình người dùng Web/Mobile"
+
+  architecture_team:
+    default_tier: "pro"
+    env_override_key: "ARCHITECTURE_MODEL"
+    rationale: "Thiết kế Clean Architecture, chuẩn hóa quan hệ ERD, OpenAPI specs và bảo mật STRIDE đòi hỏi tư duy kiến trúc bậc cao để tránh lỗi nền tảng."
+    subagents:
+      system_architect:
+        tier: "pro"
+        role: "Quyết định Tech Stack và phân tầng Clean Architecture"
+      security_architect:
+        tier: "pro"
+        role: "Mô hình đe dọa STRIDE và ma trận phân quyền RBAC"
+      technical_pm:
+        tier: "flash"
+        role: "Phân rã đồ thị công việc DAG Backlog"
+
+  engineering_team:
+    default_tier: "flash"
+    synthesis_tier: "pro"
+    env_override_key: "ENGINEERING_MODEL"
+    rationale: "Sử dụng Pro cho Deep Logic Synthesis & Clean Architecture, và Flash cho Boilerplate/UI/DevOps giúp tiết kiệm ~60% chi phí."
+    subagents:
+      backend_engineer:
+        tier: "pro"
+        role: "Lập trình Clean Architecture 5 tầng, SQLAlchemy 2.0 & Alembic"
+      frontend_engineer:
+        tier: "flash"
+        role: "Lập trình UI Screens, Store và Jest test suite"
+      devops_engineer:
+        tier: "flash_lite"
+        role: "Multi-stage Dockerfile và docker-compose"
+
+  qa_team:
+    default_tier: "flash"
+    audit_tier: "pro"
+    env_override_key: "QA_MODEL"
+    rationale: "Chạy test runner và auto-healing patch dùng Flash; thẩm định bảo mật OWASP và chấm điểm Code Review scorecard dùng Pro."
+    subagents:
+      qa_automation:
+        tier: "flash"
+        role: "Điều phối PyTest, Code Coverage và Jest Runner"
+      database_auditor:
+        tier: "flash"
+        role: "Thẩm định tính toàn vẹn Alembic và Schema Drift"
+      code_reviewer:
+        tier: "pro"
+        role: "Đánh giá Clean Code Scorecard và Tech Lead Readability"
+      security_auditor:
+        tier: "pro"
+        role: "Kiểm toán 10 tiêu chuẩn OWASP API Security"
+      auto_healing_coordinator:
+        tier: "flash"
+        role: "Phân tích traceback và áp bản vá mã nguồn"
+
+  release_team:
+    default_tier: "flash_lite"
+    env_override_key: "RELEASE_MODEL"
+    rationale: "Tổng hợp UAT Checklist, User Manual và Manifest là các tác vụ định dạng tài liệu, dùng Flash-Lite giúp tiết kiệm tối đa chi phí."
+    subagents:
+      release_engineer:
+        tier: "flash_lite"
+        role: "Đóng gói ZIP và tính SHA-256 Checksum"
+      tech_writer:
+        tier: "flash_lite"
+        role: "Biên soạn USER_MANUAL.md và hướng dẫn triển khai"
+      client_handover_lead:
+        tier: "flash_lite"
+        role: "Lập bảng kiểm nghiệm thu UAT dễ hiểu cho khách hàng"

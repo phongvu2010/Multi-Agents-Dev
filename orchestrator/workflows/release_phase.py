@@ -29,7 +29,8 @@ Nhiệm vụ:
 2. Đóng vai trò Tech Writer: Viết tài liệu README.md chi tiết cho dự án và User Manual.
 3. Đóng vai trò Client Handover Lead: Lập Bảng kiểm tra nghiệm thu UAT (UAT_CHECKLIST.md) để khách hàng nghiệm thu.
 """
-    console.print("  [dim]• Đang kích hoạt Release Engineer, Tech Writer và Client Handover Agents...[/dim]")
+    model_tag = f"{getattr(agent, 'model', 'N/A')} [{getattr(agent, 'model_tier', 'flash_lite').upper()}]"
+    console.print(f"  [dim]• Đang kích hoạt Release Sub-Team (Mô hình: {model_tag})...[/dim]")
     async with agent:
         response = await agent.chat(prompt)
         content = await response.text()

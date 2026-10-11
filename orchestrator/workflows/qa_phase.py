@@ -32,6 +32,8 @@ async def run_qa_phase(
     tests_dir.mkdir(parents=True, exist_ok=True)
 
     agent = factory.create_qa_team()
+    model_tag = f"{getattr(agent, 'model', 'N/A')} [{getattr(agent, 'model_tier', 'flash').upper()}]"
+    console.print(f"  [bold yellow]• Sub-Team 4 QA & Security Audit sẵn sàng (Mô hình: {model_tag})[/bold yellow]")
 
     # =========================================================================
     # BƯỚC 4.1: SINH BỘ TEST SUITE PYTEST (UNIT & INTEGRATION TESTS CHO FASTAPI + SQLALCHEMY)

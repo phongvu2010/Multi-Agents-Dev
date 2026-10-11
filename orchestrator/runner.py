@@ -70,6 +70,7 @@ class SDLCOrchestrator:
             f"[bold]Dự án:[/bold] {project_name}\n"
             f"[bold]Nền tảng Frontend:[/bold] {platform_label}\n"
             f"[bold]Tech Lead Stack:[/bold] Python/FastAPI + React Native / Node.js\n"
+            f"[bold]Phân bổ Mô hình AI:[/bold] Dynamic Cost Routing (Pro / Flash / Flash-Lite)\n"
             f"[bold]Lộ trình:[/bold] 4 Giai đoạn phát triển hoàn chỉnh (DAG Engine, Auto-Healing, Release Bundler)\n"
             f"[bold]Chế độ:[/bold] {'Khôi phục phiên làm việc (Resume)' if resume else 'Khởi tạo mới'}",
             title="[bold cyan]Google Antigravity SDK Orchestrator[/bold cyan]",
