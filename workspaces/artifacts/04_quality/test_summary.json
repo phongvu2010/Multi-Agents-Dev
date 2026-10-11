@@ -1,14 +1,18 @@
 {
-  "test_engine": "PyTest Asyncio Native Runner + Frontend Test Suite (Synced)",
+  "test_engine": "PyTest Asyncio + pytest-cov Runner & Frontend Test Suite (Synced)",
   "backend_tests": {
     "total_test_cases": 3,
     "passed": 3,
     "failed": 0,
-    "coverage_percentage": 94.5
+    "coverage_percentage": 89.9,
+    "coverage_status": "PASSED",
+    "threshold_required": 80.0
   },
   "database_migrations": {
     "engine": "Alembic 1.13+",
     "migration_configured": true,
+    "schema_drift_check": "PASSED",
+    "schema_drift_detail": "Zero Schema Drift (No new upgrade operations detected)",
     "status": "VALIDATED"
   },
   "frontend_tests": {

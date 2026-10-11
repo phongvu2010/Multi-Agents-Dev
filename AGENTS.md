@@ -34,9 +34,9 @@ Khi nhận yêu cầu phần mềm từ người dùng hoặc khách hàng, hệ
 4. **Sub-Team 4: Quality Assurance & Security Audit (`.agents/subteams/subteam_4_qa.md`)**
    - **Thành viên:** QA Automation Agent, Code Reviewer Agent, Security Auditor Agent, Database Auditor Agent.
    - **Kỹ năng sử dụng:** `test-runner`, `code-review-evaluator`, `secret-scanner`.
-   - **Cơ chế kiểm thử ba lớp (Triple Verification):** 
-     - **Backend:** Chạy thực tế `pytest` qua subprocess (TestClient + Session testing).
-     - **Database:** Thẩm định tính toàn vẹn của Alembic Migrations (`alembic.ini`, `env.py`, `versions/0001_initial_schema.py`).
+   - **Cơ chế kiểm thử ba lớp nâng cao (Triple Verification & Quality Metrics):** 
+     - **Backend:** Chạy thực tế `pytest` qua subprocess tích hợp **Code Coverage tự động (`pytest-cov`)**, bắt buộc đạt tối thiểu **>= 80% coverage**.
+     - **Database:** Thẩm định tính toàn vẹn của Alembic Migrations và **kiểm soát Schema Drift bằng `alembic check` (Zero Drift Policy)**.
      - **Frontend (Web/Mobile):** Kiểm tra cấu trúc đa màn hình / components, TypeScript AST & **thực thi bộ Jest Test Suite qua Node subprocess (`run_tests.cjs`)**.
      - **Security:** Quét tĩnh Secret Leaks & kiểm toán OWASP API Security Top 10.
    - ⟳ **Auto-Healing Loop:** Nếu phát hiện lỗi (Defect Ticket), tự động trích xuất traceback, áp bản vá trực tiếp vào mã nguồn tối đa 3 lần.
@@ -55,7 +55,8 @@ Hệ thống được thiết kế tối ưu cho việc **Manual Review của Te
 
 - **Backend Framework:** `Python (FastAPI v0.110+)`
 - **ORM / Database Access:** `SQLAlchemy 2.0` Declarative Mapped Models + Repositories Pattern
-- **Database Migrations:** `Alembic 1.13+` Version-Controlled Schema Migrations
+- **Database Migrations:** `Alembic 1.13+` Version-Controlled Schema Migrations kèm `alembic check`
+- **Testing & Coverage:** `PyTest 8.0+` kèm `pytest-cov` (Ngưỡng >= 80% Coverage) + `Jest`
 - **Frontend / Web & Mobile:** `React Native (TypeScript)` (Mobile) hoặc `Next.js / React Vite (TypeScript)` (Web) + `Jest`
 - **Database:** `PostgreSQL 15+` (production) & `SQLite` (local/testing)
 - **Kiến trúc mã nguồn:** Phân tầng triệt để Clean Architecture (`core/` -> `models/` -> `schemas/` -> `repositories/` -> `services/` -> `routers/`).
@@ -74,31 +75,47 @@ Khi chạy trong IDE hoặc qua CLI Runner, hệ thống tự động sinh tài 
 
 ## 🛠️ 4. CÁCH THỰC THI TRONG ANTIGRAVITY 2.0 IDE
 
-### Cách 1: Chạy toàn trình qua Terminal tích hợp
+### Cách 1: Triệu hồi Native Subagents qua Chat Canvas của Antigravity 2.0
+Các Subagents đã được cấu hình native tại `.agents/subteams/`. Bạn có thể tương tác trực tiếp bằng cách gõ `@<tên_subteam>` kết hợp cùng các Slash Commands:
+
+- **Sub-Team 1 (Discovery):**
+  - `@discovery_team: /grill-me Phỏng vấn tôi để làm rõ các yêu cầu nghiệp vụ còn mâu thuẫn trong file @sample_client_brief.md`
+  - `@discovery_team: /plan Bóc tách phạm vi In-scope MVP và xuất bộ User Stories chuẩn Gherkin.`
+- **Sub-Team 2 (Architecture):**
+  - `@architecture_team: /plan Thiết kế API OpenAPI 3.0 và Mermaid ERD theo sở trường Tech Lead (FastAPI + React Native).`
+  - `@architecture_team: /boost Phân tích mô hình đe dọa STRIDE và thiết lập ma trận phân quyền RBAC.`
+- **Sub-Team 3 (Engineering):**
+  - `@engineering_team: /plan Lập trình tính năng đặt lịch theo Clean Architecture 5 tầng.`
+  - `@engineering_team: /goal Hoàn thiện toàn bộ mã nguồn Backend FastAPI và Frontend React Native kèm Jest tests.`
+- **Sub-Team 4 (QA & Audit):**
+  - `@qa_team: Chạy PyTest đo Code Coverage (pytest-cov), kiểm tra alembic check zero drift và scan Secret Leaks.`
+  - `@qa_team: Tự động kích hoạt Auto-Healing vá lỗi nếu phát hiện test case thất bại.`
+- **Sub-Team 5 (Release):**
+  - `@release_team: Đóng gói gói phát hành ZIP, tính checksum SHA-256 và lập bảng nghiệm thu UAT_CHECKLIST.md.`
+- **Quan sát tương tác:** Xem tài liệu review tương tác và biểu đồ hiển thị thời gian thực trên **Auxiliary Pane** (bên phải giao diện Antigravity 2.0).
+
+### Cách 2: Triệu hồi Native Subagent qua Terminal Dispatcher
 ```bash
-# Chạy với file yêu cầu:
-python -m orchestrator.runner --project "Ten_Du_An" --input-file "workspaces/sample_client_brief.md"
+# Xem danh sách tất cả Sub-Teams:
+python -m orchestrator.agent_factory --list
 
-# Khôi phục từ checkpoint gián đoạn:
-python -m orchestrator.runner --project "Ten_Du_An" --resume
+# Triệu hồi trực tiếp 1 Sub-Team bằng CLI:
+python -m orchestrator.agent_factory --subteam discovery_team --prompt "Phân tích brief @sample_client_brief.md" --project "MotoCare"
 ```
-
-### Cách 2: Triệu hồi Native Subagents qua Chat Canvas của Antigravity 2.0
-Các Subagents đã được cấu hình native tại `.agents/subteams/`. Bạn có thể tương tác trực tiếp:
-- **Sub-Team 1:** `@discovery_team: Phân tích file yêu cầu @sample_client_brief.md và xuất PRD chuẩn SMART`
-- **Sub-Team 2:** `@architecture_team: Thiết kế OpenAPI và ERD theo tech stack của Tech Lead`
-- **Sub-Team 3:** `@engineering_team: Sinh mã nguồn Clean Architecture và Frontend Mobile`
-- **Sub-Team 4:** `@qa_team: Chạy PyTest, kiểm tra Jest frontend và scan bảo mật`
-- **Sub-Team 5:** `@release_team: Đóng gói release zip và lập UAT Checklist`
-- Kiểm tra các Artifacts trực quan trên **Auxiliary Pane** (bên phải giao diện Antigravity 2.0).
 
 ### Cách 3: Sử dụng Makefile & State Synchronizer (Khuyên dùng cho Dev)
 ```bash
 # Xem toàn bộ lệnh:
 make help
 
-# Chạy test toàn diện Backend & Frontend:
+# Chạy test toàn diện Backend (kèm đo độ phủ pytest-cov), Alembic check, và Frontend:
 make test-all
+
+# Thẩm định riêng Schema Drift Database:
+make check-db
+
+# Xuất báo cáo HTML Coverage:
+make cov-html
 
 # Đồng bộ mã nguồn đã chỉnh sửa ngược vào SDLC Checkpoint:
 make sync PROJECT="Ten_Du_An"

@@ -47,12 +47,21 @@ Bạn có thể triệu hồi trực tiếp các Sub-Teams qua **Chat Canvas** c
 5. @release_team       ➔ Đóng gói Release ZIP, Manifest, UAT Checklist, Manual
 ```
 
-### Cách gọi Native Sub-Teams trong Antigravity Chat:
-- **Khởi tạo yêu cầu:** `@discovery_team: Phân tích file @sample_client_brief.md và xuất bộ User Stories chuẩn Gherkin.`
-- **Thiết kế kiến trúc:** `@architecture_team: Thiết kế OpenAPI 3.0 và Mermaid ERD bám sát Tech Lead Profile.`
-- **Phát triển tính năng:** `@engineering_team: Thêm chức năng thanh toán MoMo vào backend order_service và màn hình BookingScreen.`
-- **Kiểm định chất lượng:** `@qa_team: Chạy lại PyTest và kiểm tra xem có vi phạm Secret Leaks nào không.`
-- **Bàn giao phát hành:** `@release_team: Đóng gói lại bản release v1.0.0 kèm UAT Checklist cập nhật.`
+### Cách gọi Native Sub-Teams & Kết hợp Slash Commands trong Chat Canvas:
+- **Khởi tạo yêu cầu (@discovery_team):**
+  - `@discovery_team: /grill-me Phỏng vấn tôi để làm rõ các điểm mâu thuẫn trong file @sample_client_brief.md.`
+  - `@discovery_team: /plan Bóc tách phạm vi In-Scope MVP và tạo User Stories chuẩn Gherkin.`
+- **Thiết kế kiến trúc (@architecture_team):**
+  - `@architecture_team: /plan Thiết kế OpenAPI 3.0 và Mermaid ERD bám sát Tech Lead Profile.`
+  - `@architecture_team: /boost Thực hiện phân tích mô hình bảo mật STRIDE và phân quyền RBAC.`
+- **Phát triển tính năng (@engineering_team):**
+  - `@engineering_team: /plan Lập trình phân tầng Clean Architecture cho tính năng đặt lịch.`
+  - `@engineering_team: /goal Hoàn thiện toàn bộ mã nguồn Backend FastAPI và Frontend React Native kèm Jest tests.`
+- **Kiểm định chất lượng (@qa_team):**
+  - `@qa_team: Chạy PyTest kèm đo Code Coverage (pytest-cov), kiểm tra alembic check zero drift và scan Secret Leaks.`
+  - `@qa_team: Tự động kích hoạt Auto-Healing vá lỗi nếu phát hiện test case thất bại.`
+- **Bàn giao phát hành (@release_team):**
+  - `@release_team: Đóng gói lại bản release v1.0.0 kèm UAT Checklist và RELEASE_MANIFEST.json.`
 
 ---
 
@@ -67,9 +76,11 @@ Tất cả các thao tác thường ngày đã được chuẩn hóa qua `Makefi
 | `make dev-quick PROJECT="Tên" FILE="brief.md"` | Chạy tự động không dừng (Bypass HITL - Dành cho kiểm thử CI/CD) |
 | `make resume PROJECT="Tên"` | Khôi phục chu trình SDLC từ Checkpoint gián đoạn gần nhất |
 | `make sync PROJECT="Tên"` | **Đồng bộ hóa mã nguồn thực tế ngược vào Checkpoint & State Machine** |
-| `make status PROJECT="Tên"` | Kiểm tra đối chiếu trạng thái Gate, PyTest và Alembic (Read-only) |
-| `make test-all` | Thực thi kiểm thử đồng thời cả Backend (PyTest) và Frontend (Node.js) |
-| `make test-backend` | Chạy bộ kiểm thử PyTest Backend FastAPI |
+| `make status PROJECT="Tên"` | Kiểm tra đối chiếu trạng thái Gate, PyTest (Coverage), Alembic Drift (Read-only) |
+| `make test-all` | Thực thi kiểm thử đồng thời Backend (PyTest Coverage), Alembic Drift và Frontend |
+| `make test-backend` | Chạy bộ kiểm thử PyTest Backend FastAPI kèm đo độ phủ Code Coverage |
+| `make cov-html` | Xuất báo cáo trực quan Code Coverage dạng HTML (`htmlcov/index.html`) |
+| `make check-db` | **Thẩm định Schema Drift Database (Zero Drift Policy) qua `alembic check`** |
 | `make test-frontend` | Chạy bộ kiểm thử Frontend qua Node runner |
 | `make run-backend` | Khởi chạy FastAPI Uvicorn Server tại `http://localhost:8000` |
 | `make run-frontend` | Khởi chạy Frontend Dev Server (Expo Mobile hoặc Vite Web) |

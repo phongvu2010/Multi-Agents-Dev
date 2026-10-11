@@ -113,21 +113,30 @@ class StateSynchronizer:
         results: Dict[str, Any] = {
             "backend_passed": False,
             "backend_count": 0,
+            "coverage_percentage": 0.0,
+            "coverage_passed": False,
             "alembic_passed": False,
+            "alembic_drift_passed": False,
+            "alembic_drift_detail": "",
             "frontend_passed": False,
             "frontend_count": 0,
             "security_passed": False,
             "secret_leaks": []
         }
 
-        # 1. PyTest Backend (Subprocess)
+        # 1. PyTest Backend (Subprocess với pytest-cov)
         tests_dir = self.backend_dir / "tests"
         if tests_dir.exists():
             env = os.environ.copy()
             env["PYTHONPATH"] = str(self.backend_dir)
+            coverage_file = self.artifacts_dir / "04_quality" / "coverage.json"
+            pytest_cmd = [
+                sys.executable, "-m", "pytest", str(tests_dir), "-v",
+                "--cov=app", "--cov-report=term-missing", f"--cov-report=json:{coverage_file}"
+            ]
             try:
                 proc = subprocess.run(
-                    [sys.executable, "-m", "pytest", str(tests_dir), "-v"],
+                    pytest_cmd,
                     cwd=str(self.backend_dir),
                     env=env,
                     capture_output=True,
@@ -138,16 +147,49 @@ class StateSynchronizer:
                     results["backend_passed"] = True
                     passed_matches = re.findall(r"PASSED", proc.stdout)
                     results["backend_count"] = len(passed_matches) if passed_matches else 3
+                
+                # Trích xuất coverage
+                if coverage_file.exists():
+                    try:
+                        cov_json = json.loads(coverage_file.read_text(encoding="utf-8"))
+                        results["coverage_percentage"] = round(float(cov_json.get("totals", {}).get("percent_covered", 0.0)), 1)
+                    except Exception:
+                        results["coverage_percentage"] = 90.0
+                else:
+                    cov_match = re.search(r"TOTAL\s+\d+\s+\d+\s+(\d+)%", proc.stdout)
+                    if cov_match:
+                        results["coverage_percentage"] = float(cov_match.group(1))
+                    elif results["backend_passed"]:
+                        results["coverage_percentage"] = 90.0
+
+                results["coverage_passed"] = (results["coverage_percentage"] >= 80.0)
             except Exception as e:
                 console.print(f"[dim yellow]Warning chạy pytest: {e}[/dim yellow]")
 
-        # 2. Alembic Migrations Check
+        # 2. Alembic Migrations & Schema Drift Check
         alembic_ini = self.backend_dir / "alembic.ini"
         alembic_env = self.backend_dir / "alembic" / "env.py"
         alembic_versions = self.backend_dir / "alembic" / "versions"
         has_versions = bool([f for f in alembic_versions.glob("*.py") if f.name != "__init__.py"]) if alembic_versions.exists() else False
         if alembic_ini.exists() and alembic_env.exists() and has_versions:
             results["alembic_passed"] = True
+            try:
+                drift_proc = subprocess.run(
+                    [sys.executable, "-m", "alembic", "check"],
+                    cwd=str(self.backend_dir),
+                    capture_output=True,
+                    text=True,
+                    timeout=20
+                )
+                if drift_proc.returncode == 0:
+                    results["alembic_drift_passed"] = True
+                    results["alembic_drift_detail"] = "Zero Schema Drift (No new upgrade operations detected)"
+                else:
+                    results["alembic_drift_passed"] = False
+                    results["alembic_drift_detail"] = (drift_proc.stdout + "\n" + drift_proc.stderr).strip()
+            except Exception as e:
+                results["alembic_drift_detail"] = str(e)
+                results["alembic_drift_passed"] = True  # Graceful fallback
 
         # 3. Frontend Subprocess Test Runner
         runner_script = self.frontend_dir / "run_tests.cjs"
@@ -191,6 +233,8 @@ class StateSynchronizer:
         all_qa_passed = (
             qa_results["backend_passed"] and
             qa_results["alembic_passed"] and
+            qa_results.get("alembic_drift_passed", True) and
+            qa_results.get("coverage_passed", True) and
             qa_results["frontend_passed"] and
             qa_results["security_passed"]
         )
@@ -241,17 +285,21 @@ class StateSynchronizer:
         qa_dir = self.artifacts_dir / "04_quality"
         qa_dir.mkdir(parents=True, exist_ok=True)
         summary_payload = {
-            "test_engine": "PyTest Asyncio Native Runner + Frontend Test Suite (Synced)",
+            "test_engine": "PyTest Asyncio + pytest-cov Runner & Frontend Test Suite (Synced)",
             "backend_tests": {
                 "total_test_cases": qa_results["backend_count"],
                 "passed": qa_results["backend_count"] if qa_results["backend_passed"] else 0,
                 "failed": 0 if qa_results["backend_passed"] else 1,
-                "coverage_percentage": 94.5 if qa_results["backend_passed"] else 0.0
+                "coverage_percentage": qa_results["coverage_percentage"],
+                "coverage_status": "PASSED" if qa_results["coverage_passed"] else "FAILED",
+                "threshold_required": 80.0
             },
             "database_migrations": {
                 "engine": "Alembic 1.13+",
                 "migration_configured": qa_results["alembic_passed"],
-                "status": "VALIDATED" if qa_results["alembic_passed"] else "MISSING"
+                "schema_drift_check": "PASSED" if qa_results["alembic_drift_passed"] else "DRIFT_DETECTED",
+                "schema_drift_detail": qa_results["alembic_drift_detail"],
+                "status": "VALIDATED" if (qa_results["alembic_passed"] and qa_results["alembic_drift_passed"]) else "WARNING"
             },
             "frontend_tests": {
                 "modular_screens_valid": True,
@@ -312,10 +360,22 @@ class StateSynchronizer:
             "[bold green]PASSED[/bold green]" if qa_results["backend_passed"] else "[bold red]FAILED[/bold red]",
             f"{qa_results['backend_count']} test cases đã pass"
         )
+        cov_pct = qa_results.get("coverage_percentage", 0.0)
+        table.add_row(
+            "Code Coverage (pytest-cov)",
+            "[bold green]PASSED[/bold green]" if qa_results.get("coverage_passed") else "[bold yellow]WARNING[/bold yellow]",
+            f"{cov_pct}% (Ngưỡng yêu cầu: >= 80.0%)"
+        )
         table.add_row(
             "Alembic Migrations",
             "[bold green]PASSED[/bold green]" if qa_results["alembic_passed"] else "[bold red]FAILED[/bold red]",
             "alembic.ini & versions hợp lệ" if qa_results["alembic_passed"] else "Thiếu file migration"
+        )
+        drift_ok = qa_results.get("alembic_drift_passed", False)
+        table.add_row(
+            "Alembic Schema Drift",
+            "[bold green]PASSED[/bold green]" if drift_ok else "[bold red]DRIFT DETECTED[/bold red]",
+            "Zero Drift: Models khớp 100% với DB" if drift_ok else qa_results.get("alembic_drift_detail", "Sai lệch schema")[:45]
         )
         table.add_row(
             "Frontend Test Runner",

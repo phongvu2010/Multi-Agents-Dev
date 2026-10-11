@@ -6,7 +6,7 @@ NODE ?= node
 PROJECT ?= MotoCare_Upgrade
 FILE ?= workspaces/sample_client_brief.md
 
-.PHONY: help dev dev-quick resume sync status test-all test-backend test-frontend run-backend run-frontend clean install
+.PHONY: help dev dev-quick resume sync status test-all test-backend test-frontend check-db cov-html run-backend run-frontend clean install
 
 help:
 	@echo ""
@@ -15,11 +15,13 @@ help:
 	@echo "=========================================================================="
 	@echo "  make dev [PROJECT=... FILE=...]      Khởi chạy chu trình SDLC mới từ Brief"
 	@echo "  make dev-quick [PROJECT=... FILE=..] Chạy tự động không dừng HITL (CI/CD)"
-	@echo "  make resume [PROJECT=...]            Khôi phục chu trình từ Checkpoint"
+	@echo "  make resume [PROJECT=...]            Khởi phục chu trình từ Checkpoint"
 	@echo "  make sync [PROJECT=...]              Đồng bộ mã nguồn vào SDLC Checkpoint"
 	@echo "  make status [PROJECT=...]            Kiểm tra trạng thái Gates & Tests (Read-only)"
-	@echo "  make test-all                        Thực thi toàn bộ PyTest & Frontend Jest"
-	@echo "  make test-backend                    Chạy PyTest Backend FastAPI"
+	@echo "  make test-all                        Thực thi toàn bộ PyTest (Coverage) & Frontend"
+	@echo "  make test-backend                    Chạy PyTest Backend kèm đo độ phủ (Coverage)"
+	@echo "  make cov-html                        Xuất báo cáo Code Coverage dạng HTML"
+	@echo "  make check-db                        Thẩm định Schema Drift bằng 'alembic check'"
 	@echo "  make test-frontend                   Chạy bộ kiểm thử Frontend Node.js"
 	@echo "  make run-backend                     Khởi chạy Uvicorn Backend Server (:8000)"
 	@echo "  make run-frontend                    Khởi chạy Frontend Dev Server"
@@ -47,12 +49,19 @@ status:
 	$(PYTHON) -m orchestrator.sync_state --project "$(PROJECT)" --check-only
 
 test-backend:
-	$(PYTHON) -m pytest workspaces/output_project/backend/tests -v
+	PYTHONPATH=workspaces/output_project/backend $(PYTHON) -m pytest workspaces/output_project/backend/tests -v --cov=app --cov-report=term-missing
+
+cov-html:
+	PYTHONPATH=workspaces/output_project/backend $(PYTHON) -m pytest workspaces/output_project/backend/tests -v --cov=app --cov-report=html:workspaces/artifacts/04_quality/htmlcov
+	@echo "✔ Đã xuất báo cáo HTML coverage tại: workspaces/artifacts/04_quality/htmlcov/index.html"
+
+check-db:
+	cd workspaces/output_project/backend && $(PYTHON) -m alembic check
 
 test-frontend:
 	$(NODE) workspaces/output_project/frontend/run_tests.cjs
 
-test-all: test-backend test-frontend
+test-all: test-backend check-db test-frontend
 
 run-backend:
 	PYTHONPATH=workspaces/output_project/backend $(PYTHON) -m uvicorn app.main:app --reload --app-dir workspaces/output_project/backend --port 8000

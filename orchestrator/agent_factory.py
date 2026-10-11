@@ -291,6 +291,25 @@ TIÊU CHÍ REVIEW & BẢO MẬT:
                 })
         return subteams
 
+    def get_subteam(self, team_name: str, **kwargs):
+        """Khởi tạo Native Sub-Team tương ứng theo tên gọi (@discovery_team, @architecture_team, v.v.)."""
+        clean_name = team_name.lower().replace("-", "_").replace("@", "")
+        if "discovery" in clean_name or "subteam_1" in clean_name:
+            tech_lead_profile = kwargs.get("tech_lead_profile", {"tech_lead": {"familiar_stacks": {"backend": ["Python (FastAPI)"]}}})
+            return self.create_discovery_team(tech_lead_profile=tech_lead_profile)
+        elif "architecture" in clean_name or "subteam_2" in clean_name:
+            tech_lead_profile = kwargs.get("tech_lead_profile", {"tech_lead": {"familiar_stacks": {"backend": ["Python (FastAPI)"]}}})
+            return self.create_architecture_team(tech_lead_profile=tech_lead_profile)
+        elif "engineering" in clean_name or "subteam_3" in clean_name:
+            tech_stack = kwargs.get("tech_stack", {"backend": "Python/FastAPI", "frontend": "React Native"})
+            return self.create_engineering_team(tech_stack=tech_stack, workspace_dir=kwargs.get("workspace_dir"))
+        elif "qa" in clean_name or "subteam_4" in clean_name or "quality" in clean_name:
+            return self.create_qa_team()
+        elif "release" in clean_name or "subteam_5" in clean_name or "handover" in clean_name:
+            return self.create_release_team()
+        else:
+            raise ValueError(f"Không nhận diện được Sub-Team: '{team_name}'. Các Sub-Teams hợp lệ: discovery_team, architecture_team, engineering_team, qa_team, release_team.")
+
 
 class DynamicAgentResponse:
     """Đối tượng phản hồi hỗ trợ cả .text() và .structured_output()."""
@@ -636,3 +655,54 @@ paths:
 
         text_response = f"[{self.name}] Đã xử lý yêu cầu cho dự án '{project_name}' thành công."
         return DynamicAgentResponse(text_response, structured_data=structured_obj)
+
+
+if __name__ == "__main__":
+    import argparse
+    import asyncio
+    from rich.console import Console
+    from rich.table import Table
+    from rich.panel import Panel
+
+    console = Console()
+    parser = argparse.ArgumentParser(description="Google Antigravity 2.0 Native Subagent Dispatcher")
+    parser.add_argument("--list", action="store_true", help="Liệt kê toàn bộ Native Sub-Teams trong .agents/subteams")
+    parser.add_argument("--subteam", help="Tên Sub-Team cần triệu hồi (vd: discovery_team, architecture_team, engineering_team, qa_team, release_team)")
+    parser.add_argument("--prompt", help="Chỉ thị hoặc context yêu cầu gửi đến Sub-Team")
+    parser.add_argument("--project", default="SmartApp", help="Tên dự án phần mềm")
+    args = parser.parse_args()
+
+    factory = AgentFactory(Path(__file__).parent.parent)
+
+    if args.list:
+        subteams = factory.list_subteams()
+        table = Table(title="Danh Sách Native Sub-Teams Antigravity 2.0 (.agents/subteams)", border_style="cyan")
+        table.add_column("Tên Sub-Team (@mention)", style="bold yellow")
+        table.add_column("Vai Trò (Role)", style="green")
+        table.add_column("Mô Tả & Kỹ Năng", style="white")
+        for st in subteams:
+            table.add_row(f"@{st['name']}", st["role"], st["description"])
+        console.print(table)
+    elif args.subteam and args.prompt:
+        async def run_dispatch():
+            console.print(Panel(
+                f"[bold cyan]Triệu hồi Native Sub-Team:[/bold cyan] [bold yellow]@{args.subteam}[/bold yellow]\n"
+                f"[bold]Dự án:[/bold] {args.project}\n"
+                f"[bold]Chỉ thị:[/bold] {args.prompt}",
+                title="Google Antigravity 2.0 Subagent Execution Canvas",
+                border_style="green"
+            ))
+            agent = factory.get_subteam(args.subteam)
+            full_prompt = f"Dự án: {args.project}\n\n{args.prompt}"
+            async with agent:
+                resp = await agent.chat(full_prompt)
+                txt = await resp.text()
+                struct = await resp.structured_output()
+                console.print(Panel(txt, title=f"[bold green]Phản Hồi Từ @{args.subteam}[/bold green]", border_style="cyan"))
+                if struct:
+                    console.print(f"[bold yellow]Structured Output (Model: {struct.__class__.__name__}):[/bold yellow]")
+                    console.print(struct)
+
+        asyncio.run(run_dispatch())
+    else:
+        parser.print_help()
