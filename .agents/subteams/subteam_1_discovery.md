@@ -8,7 +8,6 @@ skills:
   - gherkin_generator
 mcp_servers:
   - gemini-notebook-mcp
-  - notebooklm
 tools:
   - read_file
   - write_to_file
@@ -40,7 +39,7 @@ Khi lập trình viên hoặc PO triệu hồi `@discovery_team` trong Chat Canv
 2. **Kích hoạt Slash Commands gợi ý:**
    - Dùng `/grill-me` khi cần phỏng vấn PO làm rõ các nghiệp vụ chưa rõ ràng hoặc mâu thuẫn.
    - Dùng `/plan` khi cần phân rã các tính năng cốt lõi MVP trước khi chốt PRD.
-3. **Tận dụng MCP Servers:** Truy vấn `gemini-notebook-mcp` hoặc `notebooklm` để đối chiếu kho tri thức domain sản phẩm.
+3. **Tận dụng MCP Servers:** Truy vấn `gemini-notebook-mcp` (công cụ `notebook_query`, `notebook_list`, `research_start`) để đối chiếu kho tri thức domain sản phẩm.
 4. **Sinh Artifacts Chuẩn Định Dạng:**
    - `workspaces/artifacts/01_discovery/clarification_qna.md`
    - `workspaces/artifacts/01_discovery/user_stories.json`

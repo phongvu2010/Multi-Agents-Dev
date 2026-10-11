@@ -4,6 +4,7 @@ import os
 import re
 import sys
 from pathlib import Path
+from typing import Optional
 import yaml
 from rich.console import Console
 from rich.panel import Panel
@@ -53,13 +54,45 @@ class SDLCOrchestrator:
                 return yaml.safe_load(f) or {}
         return {}
 
-    def _backup_existing_output_if_needed(self, new_project_name: str):
-        """Tự động sao lưu dự án cũ trong output_project trước khi bắt đầu dự án mới (Overwrite Protection)."""
+    def backup_current_workspace(self, custom_name: Optional[str] = None) -> Optional[Path]:
+        """Tự động sao lưu toàn diện cả mã nguồn (output_project) và toàn bộ artifacts trước khi tạo mới (Zero Data-Loss Protection)."""
         backend_dir = self.output_project_dir / "backend"
         frontend_dir = self.output_project_dir / "frontend"
-        if not (backend_dir.exists() or frontend_dir.exists()):
-            return
+        has_output = (backend_dir.exists() and any(backend_dir.iterdir())) or (frontend_dir.exists() and any(frontend_dir.iterdir()))
+        has_artifacts = any(self.artifacts_dir.glob("*/*"))
+        if not (has_output or has_artifacts):
+            return None
 
+        readme_path = self.output_project_dir / "README.md"
+        prev_name = custom_name or "previous_project"
+        if not custom_name and readme_path.exists():
+            try:
+                first_line = readme_path.read_text(encoding="utf-8").splitlines()[0]
+                extracted = re.sub(r"[^a-zA-Z0-9_\-]", "", first_line.replace("#", "").strip())
+                if extracted and "WORKSPACE" not in extracted:
+                    prev_name = extracted
+            except Exception:
+                prev_name = "previous_project"
+
+        from datetime import datetime
+        import shutil
+        ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+        backup_dir = self.base_dir / "workspaces" / "backups" / f"{prev_name}_{ts}"
+        backup_dir.mkdir(parents=True, exist_ok=True)
+
+        try:
+            if has_output:
+                shutil.copytree(self.output_project_dir, backup_dir / "output_project", dirs_exist_ok=True)
+            if has_artifacts:
+                shutil.copytree(self.artifacts_dir, backup_dir / "artifacts", dirs_exist_ok=True)
+            console.print(f"[bold yellow]📦 [Overwrite Protection] Đã tự động sao lưu dự án và artifacts vào:[/bold yellow] [dim]{backup_dir}[/dim]")
+            return backup_dir
+        except Exception as e:
+            console.print(f"[dim yellow]Warning sao lưu output_project & artifacts: {e}[/dim yellow]")
+            return None
+
+    def _backup_existing_output_if_needed(self, new_project_name: str):
+        """Tự động sao lưu dự án cũ trước khi bắt đầu dự án mới nếu tên khác nhau."""
         readme_path = self.output_project_dir / "README.md"
         prev_name = "previous_project"
         if readme_path.exists():
@@ -74,16 +107,7 @@ class SDLCOrchestrator:
         if prev_name.lower().replace("_", "") == new_project_name.lower().replace("_", ""):
             return
 
-        from datetime import datetime
-        import shutil
-        ts = datetime.now().strftime("%Y%m%d_%H%M%S")
-        backup_dir = self.base_dir / "workspaces" / "backups" / f"{prev_name}_{ts}"
-        backup_dir.parent.mkdir(parents=True, exist_ok=True)
-        try:
-            shutil.copytree(self.output_project_dir, backup_dir, dirs_exist_ok=True)
-            console.print(f"[bold yellow]📦 Đã tự động sao lưu dự án trước đó vào:[/bold yellow] [dim]{backup_dir}[/dim]")
-        except Exception as e:
-            console.print(f"[dim yellow]Warning sao lưu output_project: {e}[/dim yellow]")
+        self.backup_current_workspace(custom_name=prev_name)
 
     async def execute_lifecycle(
         self,
@@ -308,6 +332,7 @@ def main():
     parser.add_argument("--requirements", help="Chuỗi văn bản yêu cầu thô truyền trực tiếp qua dòng lệnh")
     parser.add_argument("--resume", action="store_true", help="Khôi phục phiên làm việc từ Checkpoint gần nhất")
     parser.add_argument("--no-hitl", action="store_true", help="Tự động bypass các cổng HITL (Dành cho CI/CD test)")
+    parser.add_argument("--backup", action="store_true", help="Sao lưu snapshot toàn diện output_project và artifacts hiện tại")
     parser.add_argument(
         "--platform",
         choices=["auto", "web", "mobile"],
@@ -320,6 +345,14 @@ def main():
         base_dir=Path(__file__).parent.parent,
         hitl_enabled=not args.no_hitl
     )
+
+    if args.backup:
+        backup_path = orchestrator.backup_current_workspace(custom_name=args.project)
+        if backup_path:
+            console.print(f"[bold green]✔ Đã tạo bản sao lưu snapshot thành công tại:[/bold green] [white]{backup_path}[/white]")
+        else:
+            console.print("[dim yellow]ℹ️  Không có mã nguồn hoặc artifacts nào cần sao lưu (thư mục đang trống).[/dim yellow]")
+        return
 
     raw_req = ""
     if args.input_file:

@@ -255,7 +255,7 @@ class AgentFactory:
             tools_str = ", ".join(m["tools"][:6]) if m["tools"] else "native tools"
             lines.append(f"- MCP Server `{m['name']}`: Công cụ khả dụng: [{tools_str}]")
         lines.append("- Sub-Team 2 & 3: Ưu tiên dùng `gemini-api_gemini-api-docs` (`gemini_search_docs`, `gemini_get_doc`) để tra cứu chuẩn SDK Google GenAI & OpenAPI specs mới nhất.")
-        lines.append("- Sub-Team 1 & 4: Ưu tiên dùng `gemini-notebook-mcp` / `notebooklm` để tra cứu tài liệu nghiệp vụ tham khảo.")
+        lines.append("- Sub-Team 1 & 4: Ưu tiên dùng `gemini-notebook-mcp` (`notebook_query`, `notebook_list`, `research_start`) để tra cứu tài liệu nghiệp vụ tham khảo.")
         return "\n".join(lines) + "\n"
 
     def create_discovery_team(

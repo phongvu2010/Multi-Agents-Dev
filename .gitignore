@@ -10,6 +10,11 @@ htmlcov/
 .DS_Store
 .env
 
+# Virtual Environments
+.venv/
+venv/
+env/
+
 # Runtime Backups & Generated Releases
 workspaces/backups/
 workspaces/artifacts/05_handover/*.zip

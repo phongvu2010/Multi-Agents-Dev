@@ -72,29 +72,33 @@ Tất cả các thao tác thường ngày đã được chuẩn hóa qua `Makefi
 | Lệnh | Ý Nghĩa & Mục Đích |
 | :--- | :--- |
 | `make help` | Hiển thị menu hướng dẫn tất cả các lệnh khả dụng |
+| `make venv` | **Khởi tạo môi trường ảo `.venv` cô lập và tự động cài đặt toàn bộ dependencies** |
+| `make install` | Cài đặt/cập nhật thư viện Python (tự động ưu tiên môi trường ảo `.venv` nếu có) |
 | `make dev [PROJECT=... FILE=... PLATFORM=web|mobile]` | Khởi chạy chu trình SDLC từ yêu cầu thô (có dừng HITL, hỗ trợ chỉ định nền tảng) |
 | `make dev-quick [PROJECT=... PLATFORM=web|mobile]` | Chạy tự động không dừng (Bypass HITL - Dành cho kiểm thử CI/CD) |
 | `make resume PROJECT="Tên"` | Khôi phục chu trình SDLC từ Checkpoint gián đoạn gần nhất |
 | `make sync PROJECT="Tên"` | **Đồng bộ hóa mã nguồn thực tế ngược vào Checkpoint & State Machine** |
-| `make status PROJECT="Tên"` | Kiểm tra đối chiếu trạng thái Gate, PyTest (Coverage), Alembic Drift, Frontend (Unit+E2E) |
+| `make status PROJECT="Tên"` | Kiểm tra đối chiếu trạng thái Gate, PyTest (Coverage), Alembic Drift, Frontend (Unit+E2E, Build) |
+| `make backup [PROJECT="Tên"]` | **Sao lưu snapshot toàn bộ mã nguồn `output_project` & `artifacts` vào `workspaces/backups/`** |
+| `make clean-project` | **Tự động sao lưu an toàn rồi dọn sạch mã nguồn & artifacts để sẵn sàng cho dự án mới** |
 | `make models` | **Hiển thị Ma Trận Phân Bổ Mô Hình AI & Tối Ưu Chi Phí Token (Model Matrix)** |
 | `make subteams` | Xem danh sách 5 Native Sub-Teams & Kỹ năng |
 | `make test-examples` | **Chạy bộ kiểm thử của Dự án Mẫu Tham Khảo (examples/motocare_reference)** |
-| `make test-all` | Thực thi kiểm thử toàn diện Backend (PyTest Coverage), Alembic Drift và Frontend (Unit + E2E) |
+| `make test-all` | Thực thi kiểm thử toàn diện Backend (PyTest Coverage), DB check & Frontend (Unit, E2E, Build) |
 | `make test-backend` | Chạy bộ kiểm thử PyTest Backend FastAPI kèm đo độ phủ Code Coverage |
 | `make cov-html` | Xuất báo cáo trực quan Code Coverage dạng HTML (`htmlcov/index.html`) |
 | `make check-db` | **Thẩm định Schema Drift Database (Zero Drift Policy) qua `alembic check`** |
-| `make test-frontend` | Chạy toàn bộ kiểm thử Frontend qua Node runner (cả Unit Tests và E2E Journeys) |
+| `make test-frontend` | Chạy toàn bộ kiểm thử Frontend qua Node runner (Unit Tests, E2E Journeys, Build Check) |
 | `make test-frontend-unit` | Chạy riêng bộ kiểm thử Unit Tests Frontend (`run_tests.cjs`) |
 | `make test-frontend-e2e` | **Chạy bộ kiểm thử Frontend End-to-End thực tế (`run_e2e_tests.cjs`)** |
+| `make check-frontend-build` | **Thẩm định tính sẵn sàng Production Build của Frontend (`package.json`, `tsconfig.json`)** |
 | `make run-backend` | Khởi chạy FastAPI Uvicorn Server tại `http://localhost:8000` |
 | `make run-frontend` | Khởi chạy Frontend Dev Server (Expo Mobile hoặc Vite Web) |
 | `make docker-build [PROJECT=...]` | **Đóng gói Docker Image độc lập cho Backend** |
 | `make docker-up` | **Khởi chạy hệ thống multi-container bằng Docker Compose (FastAPI + PostgreSQL)** |
 | `make docker-down` | **Dừng và gỡ bỏ toàn bộ Docker Compose containers** |
 | `make docker-logs` | **Theo dõi log thời gian thực của Docker Compose** |
-| `make clean` | Dọn dẹp cache `__pycache__`, `.pytest_cache`, `.pyc` |
-| `make install` | Cài đặt các thư viện Python cần thiết |
+| `make clean` | Dọn dẹp cache `__pycache__`, `.pytest_cache`, `.pyc`, coverage, database |
 
 ---
 

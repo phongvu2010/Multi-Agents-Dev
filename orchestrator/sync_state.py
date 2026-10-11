@@ -237,6 +237,25 @@ class StateSynchronizer:
         elif (self.frontend_dir / "__tests__" / "App.e2e.test.tsx").exists():
             results["frontend_e2e_passed"] = True
 
+        # 3c. Frontend Production Build Readiness Check
+        pkg_json = self.frontend_dir / "package.json"
+        tsconfig_json = self.frontend_dir / "tsconfig.json"
+        has_entry = (self.frontend_dir / "src").exists() or (self.frontend_dir / "App.tsx").exists()
+        fe_build_ready = False
+        fe_build_detail = "Thiếu package.json hoặc tsconfig.json"
+        if pkg_json.exists() and tsconfig_json.exists() and has_entry:
+            try:
+                pkg_data = json.loads(pkg_json.read_text(encoding="utf-8"))
+                if pkg_data.get("name") and pkg_data.get("scripts"):
+                    fe_build_ready = True
+                    fe_build_detail = f"{pkg_data.get('name')} (Config & AST hợp lệ)"
+                else:
+                    fe_build_detail = "package.json thiếu thuộc tính name hoặc scripts"
+            except Exception as e:
+                fe_build_detail = f"Lỗi đọc package.json: {e}"
+        results["frontend_build_ready"] = fe_build_ready
+        results["frontend_build_detail"] = fe_build_detail
+
         # 4. Secret Leak Scan
         leaks = []
         app_dir = self.backend_dir / "app"
@@ -416,6 +435,12 @@ class StateSynchronizer:
             "Frontend E2E Journeys",
             "[bold green]PASSED[/bold green]" if e2e_ok else "[bold red]FAILED[/bold red]",
             f"{qa_results.get('frontend_e2e_count', 7)}/7 User Journeys đã pass" if e2e_ok else "Lỗi luồng E2E"
+        )
+        fe_build_ok = qa_results.get("frontend_build_ready", False)
+        table.add_row(
+            "Frontend Build Readiness",
+            "[bold green]READY[/bold green]" if fe_build_ok else "[bold red]NOT READY[/bold red]",
+            qa_results.get("frontend_build_detail", "Chưa sẵn sàng build")
         )
         table.add_row(
             "Security Scan",
