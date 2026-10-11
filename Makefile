@@ -151,6 +151,9 @@ docker-logs:
 clean:
 	find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
 	find . -type d -name ".pytest_cache" -exec rm -rf {} + 2>/dev/null || true
+	find . -type d -name "htmlcov" -exec rm -rf {} + 2>/dev/null || true
 	find . -name "*.pyc" -delete 2>/dev/null || true
 	find . -name ".DS_Store" -delete 2>/dev/null || true
-	@echo "✔ Đã dọn dẹp sạch sẽ caches và temporary files."
+	find . -name ".coverage*" -delete 2>/dev/null || true
+	find . -name "*.db" -delete 2>/dev/null || true
+	@echo "✔ Đã dọn dẹp sạch sẽ caches, coverage, database và temporary files."
