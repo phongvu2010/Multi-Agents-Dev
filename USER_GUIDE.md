@@ -191,9 +191,12 @@ make run-frontend
 
 #### 4. Khởi chạy hệ thống hoàn chỉnh bằng Docker:
 ```bash
-make docker-up      # Khởi động cụm Multi-container (FastAPI :8000 + PostgreSQL 15 :5432)
-make docker-logs    # Theo dõi nhật ký logs thời gian thực
-make docker-down    # Dừng và gỡ bỏ containers khi xong việc
+make docker-build          # Đóng gói toàn bộ Multi-Stage Images (Frontend Nginx + Backend FastAPI)
+make docker-build-frontend # Đóng gói riêng Frontend Multi-Stage Image (Node.js -> Nginx)
+make docker-build-backend  # Đóng gói riêng Backend Image (Python 3.12 / FastAPI)
+make docker-up             # Khởi động cụm Multi-container (Web :80 + FastAPI :8000 + PostgreSQL :5432)
+make docker-logs           # Theo dõi nhật ký logs thời gian thực
+make docker-down           # Dừng và gỡ bỏ containers khi xong việc
 ```
 
 ---
@@ -267,9 +270,12 @@ Trong quá trình phát triển, bạn có thể gọi trực tiếp các Sub-Te
 | `make test-frontend` | Chạy toàn bộ kiểm thử Frontend (cả Unit Tests, E2E Journeys & Build Check) |
 | `make check-frontend-build` | **Thẩm định tính sẵn sàng Production Build của Frontend (`package.json`, `tsconfig.json`)** |
 | `make run-backend` | Khởi chạy FastAPI Server tại `http://localhost:8000` |
-| `make run-frontend` | Khởi chạy Frontend Dev Server (Expo Mobile hoặc Vite Web) |
-| `make docker-up` | Khởi chạy hệ thống Multi-container bằng Docker Compose |
+| `make docker-build [PROJECT=...]` | **Đóng gói toàn bộ Docker Images (Frontend Multi-Stage + Backend)** |
+| `make docker-build-frontend` | **Đóng gói riêng Frontend Multi-Stage Image (Node.js -> Nginx SPA)** |
+| `make docker-build-backend` | **Đóng gói riêng Backend Image (Python 3.12 / FastAPI)** |
+| `make docker-up` | Khởi chạy hệ thống Multi-container bằng Docker Compose (Web:80, API:8000, DB:5432) |
 | `make docker-down` | Dừng và gỡ bỏ Docker Compose containers |
+| `make docker-logs` | Theo dõi log thời gian thực của Docker Compose |
 | `make clean` | Dọn dẹp cache `__pycache__`, `.pytest_cache`, `.db` tạm |
 
 ---

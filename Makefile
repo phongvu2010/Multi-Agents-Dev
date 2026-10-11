@@ -9,7 +9,7 @@ PROJECT ?= MotoCare_Upgrade
 FILE ?= workspaces/sample_client_brief.md
 PLATFORM ?= auto
 
-.PHONY: help venv dev dev-quick resume sync status models subteams test-examples test-all test-backend test-frontend test-frontend-unit test-frontend-e2e check-frontend-build check-db cov-html run-backend run-frontend docker-build docker-up docker-down docker-logs backup clean-project clean install
+.PHONY: help venv dev dev-quick resume sync status models subteams test-examples test-all test-backend test-frontend test-frontend-unit test-frontend-e2e check-frontend-build check-db cov-html run-backend run-frontend docker-build docker-build-backend docker-build-frontend docker-up docker-down docker-logs backup clean-project clean install
 
 help:
 	@echo ""
@@ -38,8 +38,10 @@ help:
 	@echo "  make check-frontend-build            Thẩm định tính sẵn sàng Production Build của Frontend"
 	@echo "  make run-backend                     Khởi chạy Uvicorn Backend Server (:8000)"
 	@echo "  make run-frontend                    Khởi chạy Frontend Dev Server"
-	@echo "  make docker-build [PROJECT=...]      Đóng gói Docker Image cho Backend"
-	@echo "  make docker-up                       Khởi chạy toàn bộ hệ thống bằng Docker Compose"
+	@echo "  make docker-build [PROJECT=...]      Đóng gói toàn bộ Docker Images (Frontend Multi-Stage + Backend)"
+	@echo "  make docker-build-frontend           Đóng gói riêng Frontend Multi-Stage Docker Image (Node -> Nginx)"
+	@echo "  make docker-build-backend            Đóng gói riêng Backend Docker Image (FastAPI / Python 3.12)"
+	@echo "  make docker-up                       Khởi chạy toàn bộ hệ thống bằng Docker Compose (Web:80, API:8000, DB:5432)"
 	@echo "  make docker-down                     Dừng và gỡ bỏ Docker Compose containers"
 	@echo "  make docker-logs                     Xem logs thời gian thực của Docker Compose"
 	@echo "  make clean                           Dọn dẹp caches, .pyc và temporary files"
@@ -175,12 +177,38 @@ run-frontend:
 	fi
 
 docker-build:
-	cd workspaces/output_project && docker build -f infra/Dockerfile -t $$(echo $(PROJECT) | tr '[:upper:]' '[:lower:]'):latest .
-	@echo "✔ Đã đóng gói thành công Docker image cho $(PROJECT)!"
+	@if [ -f "workspaces/output_project/infra/docker-compose.yml" ]; then \
+		echo "▶ Đang đóng gói toàn bộ Docker Images qua Docker Compose..."; \
+		cd workspaces/output_project && docker compose -f infra/docker-compose.yml build; \
+	elif [ -f "workspaces/output_project/infra/Dockerfile" ]; then \
+		cd workspaces/output_project && docker build -f infra/Dockerfile -t $$(echo $(PROJECT) | tr '[:upper:]' '[:lower:]'):latest .; \
+	else \
+		echo "⚠️  Chưa có mã nguồn infra trong workspaces/output_project/infra."; \
+	fi
+	@echo "✔ Đã đóng gói thành công các Docker Images (Frontend Multi-Stage + Backend)!"
+
+docker-build-frontend:
+	@if [ ! -f "workspaces/output_project/infra/Dockerfile.frontend" ]; then \
+		echo "⚠️  Chưa có file Dockerfile.frontend trong workspaces/output_project/infra."; \
+	else \
+		echo "▶ Đang đóng gói Frontend Multi-Stage Docker Image (Node.js -> Nginx)..."; \
+		cd workspaces/output_project && docker build -f infra/Dockerfile.frontend -t $$(echo $(PROJECT) | tr '[:upper:]' '[:lower:]')-frontend:latest .; \
+		echo "✔ Đã đóng gói thành công Frontend Multi-Stage Docker Image!"; \
+	fi
+
+docker-build-backend:
+	@if [ ! -f "workspaces/output_project/infra/Dockerfile.backend" ] && [ ! -f "workspaces/output_project/infra/Dockerfile" ]; then \
+		echo "⚠️  Chưa có Dockerfile Backend trong workspaces/output_project/infra."; \
+	else \
+		DOCKERFILE_TARGET=$$(if [ -f "workspaces/output_project/infra/Dockerfile.backend" ]; then echo "infra/Dockerfile.backend"; else echo "infra/Dockerfile"; fi); \
+		echo "▶ Đang đóng gói Backend Docker Image ($$DOCKERFILE_TARGET)..."; \
+		cd workspaces/output_project && docker build -f $$DOCKERFILE_TARGET -t $$(echo $(PROJECT) | tr '[:upper:]' '[:lower:]')-backend:latest .; \
+		echo "✔ Đã đóng gói thành công Backend Docker Image (Python 3.12 / FastAPI)!"; \
+	fi
 
 docker-up:
 	cd workspaces/output_project/infra && docker compose up -d
-	@echo "✔ Hệ thống multi-container đang chạy ngầm (API :8000, PostgreSQL :5432)!"
+	@echo "✔ Hệ thống multi-container đang chạy ngầm (Web :80, API :8000, PostgreSQL :5432)!"
 
 docker-down:
 	cd workspaces/output_project/infra && docker compose down

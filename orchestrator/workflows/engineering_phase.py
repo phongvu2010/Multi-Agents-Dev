@@ -106,10 +106,10 @@ async def run_engineering_phase(
     synthesizer.synthesize_frontend(domain_info, target_override=target_override)
 
     # =========================================================================
-    # WAVE 4: DEVOPS INFRASTRUCTURE (DOCKERFILE & DOCKER-COMPOSE)
+    # WAVE 4: DEVOPS INFRASTRUCTURE (MULTI-STAGE DOCKERFILE & DOCKER-COMPOSE)
     # =========================================================================
-    console.print("  [bold cyan]► Wave 4: Thiết lập Hạ tầng DevOps Docker & Compose (FastAPI + PostgreSQL)...[/bold cyan]")
-    synthesizer.synthesize_infra(state.project_name)
+    console.print(f"  [bold cyan]► Wave 4: Thiết lập Hạ tầng DevOps Multi-Stage Dockerfile ({fe_label} Nginx + FastAPI + PostgreSQL)...[/bold cyan]")
+    synthesizer.synthesize_infra(state.project_name, frontend_target=fe_target)
 
     # Lưu artifacts
     state.artifacts["backend_source"] = str(backend_dir)

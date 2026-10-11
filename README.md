@@ -169,9 +169,11 @@ make run-backend    # FastAPI tại http://localhost:8000
 make run-frontend   # Expo Mobile hoặc Vite Web
 
 # Đóng gói và chạy bằng Docker:
-make docker-build   # Đóng gói Docker Image cho Backend
-make docker-up      # Khởi chạy Multi-Container (FastAPI + PostgreSQL)
-make docker-down    # Dừng hệ thống Docker containers
+make docker-build          # Đóng gói toàn bộ Docker Images (Frontend Multi-Stage + Backend)
+make docker-build-frontend # Đóng gói riêng Frontend Multi-Stage (Node.js -> Nginx)
+make docker-build-backend  # Đóng gói riêng Backend FastAPI
+make docker-up             # Khởi chạy Multi-Container (Web :80, FastAPI :8000, PostgreSQL :5432)
+make docker-down           # Dừng hệ thống Docker containers
 ```
 
 ### 2. Khởi chạy qua Python Module

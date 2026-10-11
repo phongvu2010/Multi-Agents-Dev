@@ -29,7 +29,7 @@ Khi nhận yêu cầu phần mềm từ người dùng hoặc khách hàng, hệ
    - **Chuẩn mã nguồn Frontend (Linh hoạt Web & Mobile):**
      - **Web Portal:** **React Vite / Next.js (TypeScript)** với responsive components (`Navbar`, `CatalogView`, `BookingForm`, `OrderTracker`), REST API Client, Store và Jest test suite.
      - **Mobile App:** **React Native (TypeScript)** đa màn hình (`AuthScreen`, `CatalogScreen`, `BookingScreen`, `TrackingScreen`), Navigation và Jest test suite.
-   - **Đầu ra:** Mã nguồn hoàn chỉnh tại `workspaces/output_project/` (Backend FastAPI, Frontend Web/Mobile TypeScript, Docker).
+   - **Đầu ra:** Mã nguồn hoàn chỉnh tại `workspaces/output_project/` (Backend FastAPI, Frontend Web/Mobile TypeScript, Multi-Stage Dockerfile Nginx & Backend, Docker Compose).
 
 4. **Sub-Team 4: Quality Assurance & Security Audit (`.agents/subteams/subteam_4_qa.md`)**
    - **Thành viên:** QA Automation Agent, Code Reviewer Agent, Security Auditor Agent, Database Auditor Agent.
@@ -147,9 +147,11 @@ make run-backend    # FastAPI :8000
 make run-frontend   # Expo Mobile / Vite Web
 
 # Đóng gói và chạy bằng Docker:
-make docker-build   # Đóng gói Docker Image cho Backend
-make docker-up      # Khởi chạy Multi-Container (FastAPI + PostgreSQL)
-make docker-down    # Dừng hệ thống Docker containers
+make docker-build          # Đóng gói toàn bộ Docker Images (Frontend Multi-Stage + Backend)
+make docker-build-frontend # Đóng gói riêng Frontend Multi-Stage (Node.js -> Nginx)
+make docker-build-backend  # Đóng gói riêng Backend FastAPI
+make docker-up             # Khởi chạy Multi-Container (Web :80, FastAPI :8000, PostgreSQL :5432)
+make docker-down           # Dừng hệ thống Docker containers
 ```
 
 > Chi tiết cẩm nang vận hành dành cho đội ngũ: Xem tại [TEAM_PLAYBOOK.md](./TEAM_PLAYBOOK.md).

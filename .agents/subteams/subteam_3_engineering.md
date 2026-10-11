@@ -45,8 +45,7 @@ Bạn là Trưởng ban Phát triển Mã nguồn (Core Engineering Team) bao g�
   │   └── components/     # UI Components mô-đun hóa
   ├── __tests__/          # Jest Unit tests
   └── run_e2e_tests.cjs   # Subprocess E2E User Journeys Runner
-  ```
-- **DevOps Engineer Agent:** Xây dựng Multi-stage Dockerfile và docker-compose (FastAPI + PostgreSQL 15, `.env.example`).
+- **DevOps Engineer Agent:** Xây dựng Multi-stage Dockerfile cho Frontend (Node.js 20-alpine -> Nginx 1.27-alpine với SPA routing & API reverse proxy) và Backend (Python 3.12-slim), cùng docker-compose đa dịch vụ (Frontend + FastAPI + PostgreSQL 15, `.dockerignore`, `.env.example`).
 
 
 ## 🧠 PHÂN BỔ MÔ HÌNH & TỐI ƯU CHI PHÍ TOKEN (HYBRID MODEL TIERING)
@@ -69,6 +68,6 @@ Khi Engineer hoặc Tech Lead triệu hồi `@engineering_team` trong Chat Canva
 4. **Đầu Ra Mã Nguồn:**
    - `workspaces/output_project/backend/`: API FastAPI, Alembic migrations, SQLAlchemy models.
    - `workspaces/output_project/frontend/`: Screens/Components, Types, Store, Jest tests.
-   - `workspaces/output_project/infra/`: Dockerfile, docker-compose.
+   - `workspaces/output_project/infra/`: Dockerfile.frontend (Node -> Nginx), Dockerfile.backend, nginx.conf, docker-compose.yml.
 5. **Ủy Quyền (Handoff) sang QA:**
    - Sau khi hoàn thành code, tự động khuyến nghị: *"Chuyển giao cho @qa_team để chạy PyTest kèm pytest-cov và thẩm định alembic check."*

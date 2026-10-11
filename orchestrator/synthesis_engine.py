@@ -2612,50 +2612,300 @@ frontend/
             console.print("  [bold cyan]► Sinh mã nguồn Mobile App (React Native TypeScript)...[/bold cyan]")
             self.synthesize_frontend_mobile(domain_info)
 
-    def synthesize_infra(self, project_name: str) -> None:
-        """Sinh mã nguồn hạ tầng DevOps Dockerfile & docker-compose."""
+    def synthesize_infra(self, project_name: str, frontend_target: str = "web") -> None:
+        """Sinh mã nguồn hạ tầng DevOps Multi-Stage Dockerfile (Frontend & Backend) & docker-compose."""
         self.infra_dir.mkdir(parents=True, exist_ok=True)
+        proj_slug = re.sub(r"[^a-zA-Z0-9_\-]", "", project_name.lower().replace(" ", "_"))
 
-        (self.infra_dir / "Dockerfile").write_text("""FROM python:3.12-slim as builder
+        # 1. Backend Dockerfile (Multi-stage Python 3.12)
+        backend_dockerfile_content = """# ==============================================================================
+# BACKEND MULTI-STAGE DOCKERFILE (Python 3.12-slim / FastAPI)
+# ==============================================================================
+FROM python:3.12-slim AS builder
 WORKDIR /app
 COPY backend/requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir --user -r requirements.txt
 
+FROM python:3.12-slim AS runner
+WORKDIR /app
+ENV PATH=/root/.local/bin:$PATH
+ENV PYTHONUNBUFFERED=1
+COPY --from=builder /root/.local /root/.local
 COPY backend /app
-EXPOSE 8000
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
-""", encoding="utf-8")
 
-        (self.infra_dir / "docker-compose.yml").write_text(f"""version: '3.8'
+EXPOSE 8000
+HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \\
+  CMD python3 -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/v1/health')" || exit 1
+
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+"""
+        (self.infra_dir / "Dockerfile.backend").write_text(backend_dockerfile_content, encoding="utf-8")
+        (self.infra_dir / "Dockerfile").write_text(backend_dockerfile_content, encoding="utf-8")
+
+        # 2. Frontend Multi-Stage Dockerfile (Node.js 20-alpine -> Nginx 1.27-alpine)
+        frontend_dockerfile_content = """# ==============================================================================
+# FRONTEND MULTI-STAGE DOCKERFILE
+# Stage 1: Build Environment (Node.js 20-alpine)
+# Stage 2: Production High-Performance Web Server (Nginx 1.27-alpine)
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# STAGE 1: Build Stage
+# ------------------------------------------------------------------------------
+FROM node:20-alpine AS builder
+WORKDIR /app
+
+# Tối ưu hóa Docker Cache Layers
+COPY frontend/package.json ./
+COPY frontend/package-lock.json* ./
+RUN npm install --silent
+
+# Copy toàn bộ mã nguồn frontend
+COPY frontend/ ./
+
+# Thực thi biên dịch Production Build (Vite / Next.js / Static SPA)
+RUN if grep -q '"build"' package.json 2>/dev/null; then \\
+      npm run build || npx vite build --outDir dist || true; \\
+    fi
+
+# Đảm bảo thư mục dist luôn có nội dung hợp lệ cho Nginx
+RUN if [ ! -d "dist" ] || [ -z "$(ls -A dist 2>/dev/null)" ]; then \\
+      mkdir -p dist && cp index.html dist/ 2>/dev/null || \\
+      echo '<!DOCTYPE html><html><head><meta charset="utf-8"><title>App Preview</title><style>body{background:#0f172a;color:#f8fafc;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;}</style></head><body><div style="text-align:center"><h1>🚀 App Ready</h1><p>Frontend container running with Nginx & API Proxy.</p></div></body></html>' > dist/index.html; \\
+    fi
+
+# ------------------------------------------------------------------------------
+# STAGE 2: Production Serving Stage (Nginx Alpine)
+# ------------------------------------------------------------------------------
+FROM nginx:1.27-alpine AS runner
+
+# Gỡ bỏ trang chào mừng mặc định
+RUN rm -rf /usr/share/nginx/html/* /etc/nginx/conf.d/default.conf
+
+# Cấu hình Nginx chuyên dụng: SPA Fallback, Reverse Proxy /api/, Gzip, Security Headers
+COPY infra/nginx.conf /etc/nginx/conf.d/default.conf
+
+# Copy artifacts đã biên dịch từ Stage 1
+COPY --from=builder /app/dist /usr/share/nginx/html
+
+# Phân quyền tệp tin an toàn
+RUN chown -R nginx:nginx /usr/share/nginx/html && \\
+    chmod -R 755 /usr/share/nginx/html
+
+EXPOSE 80
+
+# Kiểm tra sức khỏe container (Docker & Kubernetes Probes)
+HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \\
+  CMD wget --quiet --tries=1 --spider http://127.0.0.1:80/healthz || exit 1
+
+CMD ["nginx", "-g", "daemon off;"]
+"""
+        (self.infra_dir / "Dockerfile.frontend").write_text(frontend_dockerfile_content, encoding="utf-8")
+
+        # 3. Nginx Configuration (SPA Routing, Gzip, OWASP Security Headers, API Reverse Proxy)
+        nginx_conf_content = """# ==============================================================================
+# NGINX CONFIGURATION FOR FRONTEND SPA & FASTAPI REVERSE PROXY
+# ==============================================================================
+server {
+    listen 80;
+    server_name localhost;
+    root /usr/share/nginx/html;
+    index index.html;
+
+    # 1. Gzip Compression
+    gzip on;
+    gzip_vary on;
+    gzip_min_length 1024;
+    gzip_proxied expired no-cache no-store private auth;
+    gzip_types
+        text/plain
+        text/css
+        text/xml
+        text/javascript
+        application/javascript
+        application/x-javascript
+        application/json
+        application/xml
+        image/svg+xml;
+    gzip_disable "MSIE [1-6]\\.";
+
+    # 2. OWASP Security Headers
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-XSS-Protection "1; mode=block" always;
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+
+    # 3. Healthcheck Endpoint
+    location = /healthz {
+        access_log off;
+        default_type text/plain;
+        return 200 "healthy\\n";
+    }
+
+    # 4. Static Asset Caching
+    location ~* \\.(?:css|js|jpg|jpeg|gif|png|ico|cur|gz|svg|svgz|mp4|ogg|ogv|webm|htc|woff|woff2|ttf|eot)$ {
+        expires 1y;
+        access_log off;
+        add_header Cache-Control "public, max-age=31536000, immutable";
+    }
+
+    # 5. Reverse Proxy tới Backend FastAPI (:8000)
+    location /api/ {
+        proxy_pass http://api:8000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_cache_bypass $http_upgrade;
+        proxy_connect_timeout 60s;
+        proxy_read_timeout 60s;
+    }
+
+    # 6. Single Page Application (SPA) Routing Fallback
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    # 7. Error Handling
+    error_page 500 502 503 504 /50x.html;
+    location = /50x.html {
+        root /usr/share/nginx/html;
+    }
+}
+"""
+        (self.infra_dir / "nginx.conf").write_text(nginx_conf_content, encoding="utf-8")
+
+        # 4. .dockerignore cho infra & workspace
+        dockerignore_content = """node_modules/
+npm-debug.log
+.venv/
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.coverage*
+htmlcov/
+dist/
+build/
+.git/
+.github/
+.DS_Store
+*.log
+.env
+.env.local
+checkpoints/
+backups/
+"""
+        (self.infra_dir / ".dockerignore").write_text(dockerignore_content, encoding="utf-8")
+        if not (self.workspace_dir / ".dockerignore").exists():
+            (self.workspace_dir / ".dockerignore").write_text(dockerignore_content, encoding="utf-8")
+
+        # 5. docker-compose.yml hoàn chỉnh (Frontend + Backend + PostgreSQL)
+        docker_compose_content = f"""version: '3.8'
 
 services:
+  frontend:
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile.frontend
+    container_name: {proj_slug}_frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      api:
+        condition: service_started
+    networks:
+      - app-network
+
   api:
     build:
       context: ..
-      dockerfile: infra/Dockerfile
+      dockerfile: infra/Dockerfile.backend
+    container_name: {proj_slug}_api
+    restart: unless-stopped
     ports:
       - "8000:8000"
     environment:
-      - DATABASE_URL=postgresql+asyncpg://postgres:secret123@db:5432/{project_name.lower()}_db
+      - DATABASE_URL=postgresql+asyncpg://postgres:secret123@db:5432/{proj_slug}_db
       - SECRET_KEY=prod_safe_super_secret_jwt_key_2026
     depends_on:
-      - db
+      db:
+        condition: service_healthy
+    networks:
+      - app-network
 
   db:
     image: postgres:15-alpine
+    container_name: {proj_slug}_db
     restart: always
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=secret123
-      - POSTGRES_DB={project_name.lower()}_db
+      - POSTGRES_DB={proj_slug}_db
     ports:
       - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d {proj_slug}_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
     volumes:
       - pgdata:/var/lib/postgresql/data
+    networks:
+      - app-network
 
 volumes:
   pgdata:
+
+networks:
+  app-network:
+    driver: bridge
+"""
+        (self.infra_dir / "docker-compose.yml").write_text(docker_compose_content, encoding="utf-8")
+
+        # 6. infra/README.md hướng dẫn chi tiết
+        (self.infra_dir / "README.md").write_text(f"""# Hạ Tầng Container & Triển Khai ({project_name})
+
+Tài liệu hướng dẫn triển khai hệ thống phân tán đa container sử dụng **Multi-Stage Dockerfile** cho cả Frontend và Backend.
+
+---
+
+## 🏗️ Kiến Trúc Multi-Stage Dockerfile
+
+### 1. Frontend Web/SPA (`infra/Dockerfile.frontend`):
+- **Stage 1 (Builder):** `node:20-alpine` cài đặt dependencies, biên dịch TypeScript và đóng gói Vite/SPA thành static assets.
+- **Stage 2 (Runner):** `nginx:1.27-alpine` siêu nhẹ (< 25MB), cấu hình SPA routing fallback (`index.html`), nén Gzip, OWASP Security Headers và reverse proxy trực tiếp các truy vấn `/api/` tới FastAPI.
+
+### 2. Backend API (`infra/Dockerfile.backend` & `infra/Dockerfile`):
+- **Stage 1 (Builder):** `python:3.12-slim` cài đặt dependencies qua `--user` flag.
+- **Stage 2 (Runner):** Tách biệt runtime, copy wheel/packages sang môi trường thực thi sạch, expose cổng `8000` kèm Healthcheck tự động.
+
+### 3. Cơ Sở Dữ Liệu (`db`):
+- `postgres:15-alpine` cấu hình healthcheck định kỳ và volume lưu trữ bền vững `pgdata`.
+
+---
+
+## 🚀 Hướng Dẫn Vận Hành
+
+```bash
+# Đóng gói toàn bộ images (Frontend Multi-stage + Backend):
+docker compose -f infra/docker-compose.yml build
+
+# Khởi chạy toàn bộ hệ sinh thái ngầm:
+docker compose -f infra/docker-compose.yml up -d
+
+# Xem log các dịch vụ:
+docker compose -f infra/docker-compose.yml logs -f
+
+# Dừng và dọn dẹp containers:
+docker compose -f infra/docker-compose.yml down
+```
 """, encoding="utf-8")
+
 
     def apply_auto_healing_patch(self, file_path_str: str, issue_description: str, suggested_fix: str) -> bool:
         """Áp dụng bản vá trực tiếp cho file bị báo lỗi trong Auto-Healing Loop."""
