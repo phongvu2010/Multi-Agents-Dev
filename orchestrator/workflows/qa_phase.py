@@ -286,6 +286,13 @@ def test_health_check_and_catalog():
     alembic_drift_passed = False
     alembic_drift_detail = ""
     try:
+        # Đảm bảo database đã được upgrade lên head trước khi kiểm tra drift
+        subprocess.run(
+            [sys.executable, "-m", "alembic", "upgrade", "head"],
+            cwd=str(backend_dir.resolve()),
+            capture_output=True,
+            timeout=25
+        )
         drift_proc = subprocess.run(
             [sys.executable, "-m", "alembic", "check"],
             cwd=str(backend_dir.resolve()),

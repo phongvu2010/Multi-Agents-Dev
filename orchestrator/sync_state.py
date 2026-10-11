@@ -174,6 +174,12 @@ class StateSynchronizer:
         if alembic_ini.exists() and alembic_env.exists() and has_versions:
             results["alembic_passed"] = True
             try:
+                subprocess.run(
+                    [sys.executable, "-m", "alembic", "upgrade", "head"],
+                    cwd=str(self.backend_dir),
+                    capture_output=True,
+                    timeout=20
+                )
                 drift_proc = subprocess.run(
                     [sys.executable, "-m", "alembic", "check"],
                     cwd=str(self.backend_dir),

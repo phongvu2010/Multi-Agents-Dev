@@ -84,7 +84,7 @@ check-db:
 	@if [ ! -f "workspaces/output_project/backend/alembic.ini" ]; then \
 		echo "⚠️  Chưa có cấu hình Alembic trong workspaces/output_project/backend."; \
 	else \
-		cd workspaces/output_project/backend && $(PYTHON) -m alembic check; \
+		cd workspaces/output_project/backend && $(PYTHON) -m alembic upgrade head && $(PYTHON) -m alembic check; \
 	fi
 
 test-frontend-unit:
@@ -108,7 +108,7 @@ test-all: test-backend check-db test-frontend
 test-examples:
 	@echo "▶ Đang chạy kiểm thử Dự án Mẫu Tham Khảo (examples/motocare_reference)..."
 	PYTHONPATH=examples/motocare_reference/output_project/backend $(PYTHON) -m pytest examples/motocare_reference/output_project/backend/tests -v --cov=app --cov-report=term-missing
-	cd examples/motocare_reference/output_project/backend && $(PYTHON) -m alembic check
+	cd examples/motocare_reference/output_project/backend && $(PYTHON) -m alembic upgrade head && $(PYTHON) -m alembic check
 	$(NODE) examples/motocare_reference/output_project/frontend/run_tests.cjs
 	$(NODE) examples/motocare_reference/output_project/frontend/run_e2e_tests.cjs
 	@echo "✔ Toàn bộ test suite của dự án mẫu Golden Reference ĐÃ PASS 100%!"
