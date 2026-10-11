@@ -164,6 +164,11 @@ make sync PROJECT="Ten_Du_An"
 # Khởi chạy server:
 make run-backend    # FastAPI tại http://localhost:8000
 make run-frontend   # Expo Mobile hoặc Vite Web
+
+# Đóng gói và chạy bằng Docker:
+make docker-build   # Đóng gói Docker Image cho Backend
+make docker-up      # Khởi chạy Multi-Container (FastAPI + PostgreSQL)
+make docker-down    # Dừng hệ thống Docker containers
 ```
 
 ### 2. Khởi chạy qua Python Module

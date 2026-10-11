@@ -88,6 +88,10 @@ Tất cả các thao tác thường ngày đã được chuẩn hóa qua `Makefi
 | `make test-frontend-e2e` | **Chạy bộ kiểm thử Frontend End-to-End thực tế (`run_e2e_tests.cjs`)** |
 | `make run-backend` | Khởi chạy FastAPI Uvicorn Server tại `http://localhost:8000` |
 | `make run-frontend` | Khởi chạy Frontend Dev Server (Expo Mobile hoặc Vite Web) |
+| `make docker-build [PROJECT=...]` | **Đóng gói Docker Image độc lập cho Backend** |
+| `make docker-up` | **Khởi chạy hệ thống multi-container bằng Docker Compose (FastAPI + PostgreSQL)** |
+| `make docker-down` | **Dừng và gỡ bỏ toàn bộ Docker Compose containers** |
+| `make docker-logs` | **Theo dõi log thời gian thực của Docker Compose** |
 | `make clean` | Dọn dẹp cache `__pycache__`, `.pytest_cache`, `.pyc` |
 | `make install` | Cài đặt các thư viện Python cần thiết |
 

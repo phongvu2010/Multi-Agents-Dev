@@ -7,7 +7,7 @@ PROJECT ?= MotoCare_Upgrade
 FILE ?= workspaces/sample_client_brief.md
 PLATFORM ?= auto
 
-.PHONY: help dev dev-quick resume sync status models subteams test-all test-backend test-frontend test-frontend-unit test-frontend-e2e check-db cov-html run-backend run-frontend clean install
+.PHONY: help dev dev-quick resume sync status models subteams test-all test-backend test-frontend test-frontend-unit test-frontend-e2e check-db cov-html run-backend run-frontend docker-build docker-up docker-down docker-logs clean install
 
 help:
 	@echo ""
@@ -30,6 +30,10 @@ help:
 	@echo "  make test-frontend-e2e               Chạy bộ kiểm thử E2E User Journeys Frontend"
 	@echo "  make run-backend                     Khởi chạy Uvicorn Backend Server (:8000)"
 	@echo "  make run-frontend                    Khởi chạy Frontend Dev Server"
+	@echo "  make docker-build [PROJECT=...]      Đóng gói Docker Image cho Backend"
+	@echo "  make docker-up                       Khởi chạy toàn bộ hệ thống bằng Docker Compose"
+	@echo "  make docker-down                     Dừng và gỡ bỏ Docker Compose containers"
+	@echo "  make docker-logs                     Xem logs thời gian thực của Docker Compose"
 	@echo "  make clean                           Dọn dẹp caches, .pyc và temporary files"
 	@echo "  make install                         Cài đặt thư viện phụ thuộc Python"
 	@echo "=========================================================================="
@@ -90,6 +94,21 @@ run-frontend:
 	else \
 		cd workspaces/output_project/frontend && npm install && npx expo start; \
 	fi
+
+docker-build:
+	cd workspaces/output_project && docker build -f infra/Dockerfile -t $$(echo $(PROJECT) | tr '[:upper:]' '[:lower:]'):latest .
+	@echo "✔ Đã đóng gói thành công Docker image cho $(PROJECT)!"
+
+docker-up:
+	cd workspaces/output_project/infra && docker compose up -d
+	@echo "✔ Hệ thống multi-container đang chạy ngầm (API :8000, PostgreSQL :5432)!"
+
+docker-down:
+	cd workspaces/output_project/infra && docker compose down
+	@echo "✔ Đã dừng và gỡ bỏ toàn bộ containers!"
+
+docker-logs:
+	cd workspaces/output_project/infra && docker compose logs -f
 
 clean:
 	find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true

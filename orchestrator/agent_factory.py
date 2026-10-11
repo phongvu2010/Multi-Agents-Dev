@@ -73,13 +73,22 @@ class ModelRouter:
     def get_tier_model(self, tier: str) -> str:
         """Lấy tên model cho một tier ('pro', 'flash', 'flash_lite'), hỗ trợ override qua biến môi trường."""
         tier_clean = tier.lower().strip()
-        tier_config = self.config.get("tiers", {}).get(tier_clean, {})
-        env_key = tier_config.get("env_override_key") or f"GEMINI_{tier_clean.upper()}_MODEL"
+        if "pro" in tier_clean:
+            tier_key = "pro"
+        elif "lite" in tier_clean:
+            tier_key = "flash_lite"
+        elif "flash" in tier_clean:
+            tier_key = "flash"
+        else:
+            tier_key = "flash"
+
+        tier_config = self.config.get("tiers", {}).get(tier_key, {})
+        env_key = tier_config.get("env_override_key") or f"GEMINI_{tier_key.upper()}_MODEL"
         default_model = tier_config.get("default_model") or {
             "pro": "gemini-2.5-pro",
             "flash": "gemini-2.5-flash",
             "flash_lite": "gemini-2.5-flash-lite"
-        }.get(tier_clean, "gemini-2.5-flash")
+        }.get(tier_key, "gemini-2.5-flash")
         
         return os.getenv(env_key, default_model)
 
@@ -164,11 +173,12 @@ class ModelRouter:
         for team_key, mention, role, def_tier, desc in teams_data:
             model_id, tier = self.get_model_for_team(team_key)
             cost_factor = self.config.get("tiers", {}).get(tier, {}).get("relative_cost_factor", 1.0)
+            tier_display = "PRO (HYBRID)" if team_key == "engineering_team" else tier.upper()
             matrix.append({
                 "team_key": team_key,
                 "mention": mention,
                 "role": role,
-                "tier": tier.upper(),
+                "tier": tier_display,
                 "model_id": model_id,
                 "desc": desc,
                 "cost_factor": f"{cost_factor}x"
@@ -465,11 +475,14 @@ MÔ HÌNH NHẬN THỨC PHÂN BỔ: {resolved_model} (Tier: {tier.upper()})
                             k, v = line.split(":", 1)
                             meta[k.strip()] = v.strip()
                 model_id, tier = self.model_router.get_model_for_team(sf.stem)
+                tier_display = meta.get("model", tier).upper()
+                if sf.stem == "subteam_3_engineering" or meta.get("name") == "engineering_team":
+                    tier_display = "PRO (HYBRID)"
                 subteams.append({
                     "id": sf.stem,
                     "name": meta.get("name", sf.stem),
                     "role": meta.get("role", "SDLC Subagent"),
-                    "tier": meta.get("model", tier).upper(),
+                    "tier": tier_display,
                     "model_id": model_id,
                     "description": meta.get("description", ""),
                     "path": str(sf)

@@ -6,8 +6,9 @@
 tiers:
   pro:
     default_model: "gemini-2.5-pro"
+    nextgen_model: "gemini-3.8-pro"
     env_override_key: "GEMINI_PRO_MODEL"
-    description: "Khả năng suy luận bậc cao, thiết kế kiến trúc phân tầng, phân tích bảo mật STRIDE/OWASP và refactor phức tạp."
+    description: "Khả năng suy luận bậc cao, thiết kế kiến trúc phân tầng, phân tích bảo mật STRIDE/OWASP và refactor phức tạp. Sẵn sàng cho Gemini 3.8 Pro."
     relative_cost_factor: 5.0
     recommended_tasks:
       - "Kiến trúc hệ thống Clean Architecture 5 tầng"
@@ -17,8 +18,9 @@ tiers:
 
   flash:
     default_model: "gemini-2.5-flash"
+    nextgen_model: "gemini-3.8-flash"
     env_override_key: "GEMINI_FLASH_MODEL"
-    description: "Cân bằng hoàn hảo giữa tốc độ, độ chuẩn xác cấu trúc, phân tích nghiệp vụ và chi phí vận hành."
+    description: "Cân bằng hoàn hảo giữa tốc độ, độ chuẩn xác cấu trúc, phân tích nghiệp vụ và chi phí vận hành. Sẵn sàng cho Gemini 3.8 Flash."
     relative_cost_factor: 1.0
     recommended_tasks:
       - "Bóc tách PRD, SMART Goals, User Stories (Gherkin)"
@@ -28,8 +30,9 @@ tiers:
 
   flash_lite:
     default_model: "gemini-2.5-flash-lite"
+    nextgen_model: "gemini-3.8-flash-lite"
     env_override_key: "GEMINI_FLASH_LITE_MODEL"
-    description: "Tốc độ siêu nhanh, tiêu thụ token tối thiểu, chuyên trách tổng hợp văn bản, viết tài liệu và quét cú pháp."
+    description: "Tốc độ siêu nhanh, tiêu thụ token tối thiểu, chuyên trách tổng hợp văn bản, viết tài liệu và quét cú pháp. Sẵn sàng cho Gemini 3.8 Flash-Lite."
     relative_cost_factor: 0.25
     recommended_tasks:
       - "Làm rõ yêu cầu sơ bộ (Clarification Q&A)"
@@ -71,10 +74,10 @@ subteams:
         role: "Phân rã đồ thị công việc DAG Backlog"
 
   engineering_team:
-    default_tier: "flash"
+    default_tier: "pro"
     synthesis_tier: "pro"
     env_override_key: "ENGINEERING_MODEL"
-    rationale: "Sử dụng Pro cho Deep Logic Synthesis & Clean Architecture, và Flash cho Boilerplate/UI/DevOps giúp tiết kiệm ~60% chi phí."
+    rationale: "Sử dụng Pro cho Backend Clean Architecture 5 tầng, SQLAlchemy 2.0 ORM & Deep Logic Synthesis; Flash cho UI Screens; Flash-Lite cho Dockerfile (Hybrid Tiering)."
     subagents:
       backend_engineer:
         tier: "pro"

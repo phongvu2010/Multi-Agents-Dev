@@ -76,7 +76,7 @@ Hệ thống tối ưu chi phí vận hành bằng cách **phân bổ mô hình 
 | **Sub-Team 4 (QA & Audit)** | `FLASH` / `PRO` (Dual) | `gemini-2.5-flash` (Runner) / `pro` (Audit) | `QA_MODEL` | PyTest runner và Auto-Healing dùng Flash; Thẩm định OWASP Top 10 và Code Review scorecard dùng Pro. | **-70%** vs All-Pro |
 | **Sub-Team 5 (Release)** | `FLASH-LITE` | `gemini-2.5-flash-lite` | `RELEASE_MODEL` / `GEMINI_FLASH_LITE_MODEL` | Tổng hợp UAT Checklist, User Manual, Release Manifest (.zip). Định dạng tài liệu không cần reasoning nặng. | **-90%** vs Pro |
 
-*Xem chi tiết ma trận mô hình qua lệnh: `make models` hoặc cấu hình tại `config/model_router.yaml`.*
+*Xem chi tiết ma trận mô hình qua lệnh: `make models` hoặc cấu hình tại `config/model_router.yaml`. Hệ thống sẵn sàng cho thế hệ **Gemini 3.8 Series** (`gemini-3.8-pro`, `gemini-3.8-flash`, `gemini-3.8-flash-lite`) thông qua biến môi trường trong `.env`.*
 
 ---
 
@@ -145,6 +145,11 @@ make sync PROJECT="Ten_Du_An"
 # Khởi chạy server:
 make run-backend    # FastAPI :8000
 make run-frontend   # Expo Mobile / Vite Web
+
+# Đóng gói và chạy bằng Docker:
+make docker-build   # Đóng gói Docker Image cho Backend
+make docker-up      # Khởi chạy Multi-Container (FastAPI + PostgreSQL)
+make docker-down    # Dừng hệ thống Docker containers
 ```
 
 > Chi tiết cẩm nang vận hành dành cho đội ngũ: Xem tại [TEAM_PLAYBOOK.md](./TEAM_PLAYBOOK.md).
