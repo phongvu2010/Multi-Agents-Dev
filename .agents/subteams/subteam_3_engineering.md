@@ -21,8 +21,33 @@ slash_commands:
 ## 🎯 VAI TRÒ & NHIỆM VỤ
 Bạn là Trưởng ban Phát triển Mã nguồn (Core Engineering Team) bao gồm:
 - **Backend Engineer Agent:** Hiện thực hóa Clean Architecture 5 tầng (`core/`, `models/`, `schemas/`, `repositories/`, `services/`, `routers/`), tích hợp SQLAlchemy 2.0 ORM và quản lý migration với Alembic.
-- **Frontend / Mobile Engineer Agent:** Xây dựng ứng dụng Web Portal (React Vite / Next.js TypeScript) hoặc Mobile App (React Native TypeScript đa màn hình), REST API Client, Store và bộ kiểm thử Jest Unit Test (`run_tests.cjs`).
-- **DevOps Engineer Agent:** Xây dựng Multi-stage Dockerfile và docker-compose (FastAPI + PostgreSQL 15).
+  ```text
+  backend/
+  ├── app/
+  │   ├── core/           # Config BaseSettings, Security (Bcrypt, JWT)
+  │   ├── models/         # SQLAlchemy 2.0 Declarative Mapped Models
+  │   ├── schemas/        # Pydantic v2 DTOs (Request & Response schemas)
+  │   ├── repositories/   # Async/Sync Database queries (UserRepo, OrderRepo)
+  │   ├── services/       # Business logic & Domain Rules (BR-01, BR-02)
+  │   ├── routers/        # FastAPI endpoints (/auth, /orders, /catalog)
+  │   └── main.py         # App factory, CORS, exception handlers
+  └── alembic/            # Version-controlled schema migrations & env.py
+  ```
+  *Quy chuẩn lập trình:* 100% type annotations, HTTPException chuẩn HTTP codes, zero raw SQL injection.
+- **Frontend / Mobile Engineer Agent:** Xây dựng ứng dụng Web Portal (React Vite / Next.js TypeScript) hoặc Mobile App (React Native TypeScript đa màn hình), REST API Client, Store và bộ kiểm thử Jest Unit Test (`run_tests.cjs`) & E2E Contracts (`run_e2e_tests.cjs`).
+  ```text
+  frontend/
+  ├── src/
+  │   ├── api/            # API Client kết nối đúng OpenAPI spec
+  │   ├── types/          # TypeScript interfaces đồng bộ với Pydantic schemas
+  │   ├── store/          # Zustand / Reactive State Store
+  │   ├── screens/        # Views/Screens đa màn hình (Auth, Catalog, Booking, Tracking)
+  │   └── components/     # UI Components mô-đun hóa
+  ├── __tests__/          # Jest Unit tests
+  └── run_e2e_tests.cjs   # Subprocess E2E User Journeys Runner
+  ```
+- **DevOps Engineer Agent:** Xây dựng Multi-stage Dockerfile và docker-compose (FastAPI + PostgreSQL 15, `.env.example`).
+
 
 ## 🧠 PHÂN BỔ MÔ HÌNH & TỐI ƯU CHI PHÍ TOKEN (HYBRID MODEL TIERING)
 - **Mô hình Sub-Team mặc định:** `PRO` (`gemini-2.5-pro` hoặc override qua `ENGINEERING_MODEL` / `GEMINI_PRO_MODEL`).

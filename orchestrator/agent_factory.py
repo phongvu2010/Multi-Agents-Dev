@@ -200,9 +200,19 @@ class AgentFactory:
         self.model_router = ModelRouter(self.config_dir / "model_router.yaml")
 
     def _read_prompt(self, filename: str) -> str:
-        prompt_path = self.prompts_dir / filename
-        if prompt_path.exists():
-            return prompt_path.read_text(encoding="utf-8")
+        """Đọc system instructions từ .agents/subteams/ làm Single Source of Truth (SSOT)."""
+        # 1. Ưu tiên tuyệt đối đọc từ .agents/subteams/ (loại bỏ YAML frontmatter header)
+        subteam_path = self.subteams_dir / filename
+        if subteam_path.exists():
+            text = subteam_path.read_text(encoding="utf-8")
+            clean_body = re.sub(r"^---\s*\n.*?\n---\s*\n", "", text, flags=re.DOTALL)
+            return clean_body.strip()
+
+        # 2. Fallback dự phòng (nếu có config/prompts)
+        if hasattr(self, "prompts_dir") and self.prompts_dir.exists():
+            prompt_path = self.prompts_dir / filename
+            if prompt_path.exists():
+                return prompt_path.read_text(encoding="utf-8").strip()
         return ""
 
     def _load_rules(self) -> str:
